@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Adminator - Immich Local Media Optimizer (ODROID-C2)</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Auth Overlay Modal -->
+  <div class="auth-modal" id="authModal" style="display: none;">
+    <div class="auth-box">
+      <h2>🔐 Masuk Web UI</h2>
+      <p>Akses Adminator Media Optimizer (ODROID-C2)</p>
+      <input type="password" id="authPassword" placeholder="Masukkan password..." onkeydown="if(event.key==='Enter') verifyPassword()">
+      <button onclick="verifyPassword()">Buka Dashboard</button>
+      <div class="auth-error" id="authError">Password salah, coba lagi!</div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+  <!-- 1. SIDEBAR (Dark Slate Adminator Style) -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-icon">📸</div>
+      <div class="brand-info">
+        <span class="brand-title">Adminator</span>
+        <span class="brand-subtitle">Immich Photos</span>
+      </div>
+    </div>
+
+    <div class="nav-section-title">Navigasi Utama</div>
+    <div class="nav-menu">
+      <div class="nav-item active" onclick="switchTab(event,'dash')">
+        <div class="nav-item-content">
+          <span>📊</span>
+          <span>Dashboard</span>
+        </div>
+      </div>
+      <div class="nav-item" onclick="switchTab(event,'node')">
+        <div class="nav-item-content">
+          <span>🕸️</span>
+          <span>Flowchart Monitor</span>
+        </div>
+        <span class="nav-badge badge-green" id="nav-badge-worker">Live</span>
+      </div>
+      <div class="nav-item" onclick="switchTab(event,'analytics')">
+        <div class="nav-item-content">
+          <span>📈</span>
+          <span>Storage Analytics</span>
+        </div>
+      </div>
+      <div class="nav-item" onclick="switchTab(event,'device')">
+        <div class="nav-item-content">
+          <span>🖥️</span>
+          <span>Device Monitor</span>
+        </div>
+        <span class="nav-badge badge-green" id="nav-badge-device">Normal</span>
+      </div>
+      <div class="nav-item" onclick="switchTab(event,'settings')">
+        <div class="nav-item-content">
+          <span>⚙️</span>
+          <span>Live Settings</span>
+        </div>
+      </div>
+      <div class="nav-item" onclick="switchTab(event,'logs')">
+        <div class="nav-item-content">
+          <span>📜</span>
+          <span>System Logs</span>
+        </div>
+      </div>
+      <div class="nav-item" onclick="switchTab(event,'sync')">
+        <div class="nav-item-content">
+          <span>☁️</span>
+          <span>Cloud Backup</span>
+        </div>
+        <span class="nav-badge badge-green" id="nav-badge-sync">Idle</span>
+      </div>
+      <div class="nav-item" onclick="switchTab(event,'help')">
+        <div class="nav-item-content">
+          <span>❓</span>
+          <span>Panduan &amp; Help</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="device-tag">
+        <span class="live-dot"></span>
+        <span>ODROID-C2 (ARM64)</span>
+      </div>
+      <span style="font-size:0.7rem;color:var(--adm-text-dim);">v1.0.0</span>
+    </div>
+  </aside>
+
+  <!-- 2. MAIN CONTENT AREA -->
+  <div class="main-content">
+    <!-- TOP NAVBAR (Header Atas) -->
+    <header class="top-bar">
+      <div class="top-left-group">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <span id="top-mode-badge" class="mode-badge mode-NORMAL">NORMAL</span>
+        <span id="top-pos-status" class="pos-status pos-WAITING">MENUNGGU</span>
+        <span id="top-sync-badge" class="sync-badge s-normal">SYNC NORMAL</span>
+      </div>
+
+      <!-- Quick Mode Switcher -->
+      <div class="top-quick-controls">
+        <button class="btn-quick btn-active-normal" id="quick-btn-normal" onclick="setMode('normal')">Normal</button>
+        <button class="btn-quick" id="quick-btn-force" onclick="setMode('force')">🔥 Force</button>
+        <button class="btn-quick" id="quick-btn-pause" onclick="setMode('pause')">⏸️ Pause</button>
+        <button class="btn-quick" onclick="triggerScan()">🔄 Scan</button>
+      </div>
+
+      <!-- Hardware Telemetry: CPU Temp & RAM Gauge -->
+      <div class="sys-metrics-top">
+        <div class="metric-pill">
+          <span class="dot-indicator dot-normal" id="top-temp-dot"></span>
+          <span>Suhu: <b id="top-temp" class="t-norm">--°C</b></span>
+        </div>
+        <div class="metric-pill">
+          <span>RAM: <b id="top-ram">--/-- MB</b></span>
+          <div class="ram-micro-bar"><div class="ram-micro-fill" id="ram-fill" style="width: 25%;"></div></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- =========================================================================
+         TAB 1: DASHBOARD
+         ========================================================================= -->
+    <main id="pane-dash" class="tab-pane active">
+      <!-- Stat Cards with Signature Adminator Accent Borders -->
+      <div class="stats-grid">
+        <!-- 1. Total Storage Saved -->
+        <div class="stat-card border-accent-green">
+          <div class="stat-card-header">
+            <span class="stat-category">Total Dipangkas / Dihemat</span>
+            <span class="stat-card-icon">💾</span>
+          </div>
+          <div class="stat-val c-green" id="hs-saved-mb">0.00 MB</div>
+          <div class="stat-lbl">
+            <div class="stat-lbl-row">
+              <span class="stat-trend trend-up" id="hs-saved-pct">Hemat 0.0%</span>
+              <span id="hs-saved-comp" style="color:var(--adm-text);">0 MB → 0 MB</span>
+            </div>
+            <div class="stat-lbl-row" style="font-size:0.72rem;color:var(--adm-text-mut);margin-top:2px;">
+              <span id="hs-total-lib">Total Koleksi: 0 file (0.00 GB)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Queue & Worker State -->
+        <div class="stat-card border-accent-blue">
+          <div class="stat-card-header">
+            <span class="stat-category">Antrean &amp; Worker</span>
+            <span class="stat-card-icon">⚡</span>
+          </div>
+          <div class="stat-val c-blue" id="hs-pending">0</div>
+          <div class="stat-lbl">
+            <span>Aktif memproses: <b id="hs-processing" style="color:#fff;">0</b> file</span>
+          </div>
+        </div>
+
+        <!-- 3. Sukses Kompresi -->
+        <div class="stat-card border-accent-teal">
+          <div class="stat-card-header">
+            <span class="stat-category">Sukses Kompres</span>
+            <span class="stat-card-icon">✅</span>
+          </div>
+          <div class="stat-val" style="color:var(--adm-teal);" id="hs-success">0</div>
+          <div class="stat-lbl">File berhasil dipadatkan</div>
+        </div>
+
+        <!-- 4. Skip (Boros) -->
+        <div class="stat-card border-accent-yellow">
+          <div class="stat-card-header">
+            <span class="stat-category">Skip (Cegah Boros)</span>
+            <span class="stat-card-icon">🛡️</span>
+          </div>
+          <div class="stat-val c-yellow" id="hs-skipped">0</div>
+          <div class="stat-lbl">Asli lebih kecil (tidak diubah)</div>
+        </div>
+
+        <!-- 5. Gagal / Error -->
+        <div class="stat-card border-accent-red">
+          <div class="stat-card-header">
+            <span class="stat-category">Gagal (Error)</span>
+            <span class="stat-card-icon">⚠️</span>
+          </div>
+          <div class="stat-val c-red" id="hs-error">0</div>
+          <div class="stat-lbl">Toleransi error sistem</div>
+        </div>
+
+        <!-- 6. Mesin & Thermal -->
+        <div class="stat-card border-accent-purple">
+          <div class="stat-card-header">
+            <span class="stat-category">Status Mesin</span>
+            <span class="stat-card-icon">🌡️</span>
+          </div>
+          <div class="stat-val c-purple" id="dash-thermal-val">--°C</div>
+          <div class="stat-lbl" id="dash-sched-val">Jadwal: Aktif (01-06)</div>
+        </div>
+      </div>
+
+      <!-- Controls & Table Toolbar -->
+      <div class="controls-row">
+        <div class="shortcuts-panel">
+          <button class="shortcut-btn active-normal" id="btn-normal" onclick="setMode('normal')">⚙️ Mode Normal</button>
+          <button class="shortcut-btn" id="btn-force" onclick="setMode('force')">🔥 Mode Force</button>
+          <button class="shortcut-btn" id="btn-pause" onclick="setMode('pause')">⏸️ Pause</button>
+          <button class="shortcut-btn" id="btn-resume" onclick="setMode('resume')">▶️ Resume</button>
+          <button class="shortcut-btn" onclick="triggerScan()">🔄 Scan Immich</button>
+        </div>
+        <div class="view-toggle">
+          <input type="text" class="search-input" id="tableFilter" placeholder="Cari file..." onkeyup="filterFilesTable()">
+          <span style="font-size:0.8rem;">Tampilan Ringkas</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="compactToggle" onchange="toggleCompactMode(this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Media Files Table -->
+      <div class="files-table-container" id="tableContainer">
+        <table>
+          <thead>
+            <tr>
+              <th>Nama File</th>
+              <th>Tipe</th>
+              <th>Status</th>
+              <th>Integritas Metadata</th>
+              <th class="hide-compact">Asli (MB)</th>
+              <th>Kompres (MB)</th>
+              <th>Hemat (%)</th>
+              <th>Kategori</th>
+              <th class="hide-compact">Waktu</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-body">
+            <tr><td colspan="9" style="text-align:center;color:var(--adm-text-dim);">Memuat data file...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- =========================================================================
+         TAB 2: FLOWCHART MONITOR
+         ========================================================================= -->
+    <div id="pane-node" class="tab-pane">
+      <div class="fc-wrap">
+        <div class="fc-title">🔄 Flowchart Real-Life: Alur Kerja &amp; Eksekusi Mesin Aktif</div>
+        <p class="fc-desc">Node yang menyala dan berkedip menunjukkan tahapan aktif yang sedang dijalankan prosesor ODROID-C2 saat ini secara real-time.</p>
+        
+        <svg class="fc-svg" id="live-svg" viewBox="0 0 1140 300" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <marker id="ah" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#94a3b8"></path></marker>
+            <marker id="ahb" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#2196f3"></path></marker>
+            <marker id="ahr" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#f83245"></path></marker>
+            <marker id="ahg" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#00d284"></path></marker>
+          </defs>
+
+          <!-- Jalur / Garis Panah Koneksi -->
+          <g class="ed"><path d="M120,150 L150,150" stroke="#475569" stroke-width="2" marker-end="url(#ah)"></path></g>
+          <g class="ed"><path d="M260,150 L290,150" stroke="#475569" stroke-width="2" marker-end="url(#ah)"></path></g>
+          <g class="ed"><path d="M400,150 L430,150" stroke="#475569" stroke-width="2" marker-end="url(#ah)"></path></g>
+          <g class="ed"><path d="M560,150 L590,150" stroke="#475569" stroke-width="2" marker-end="url(#ah)"></path></g>
+          
+          <!-- Percabangan Bandingkan -> Replace vs Skip -->
+          <g class="ed"><path d="M700,150 H730 V85 H760" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"></path></g>
+          <g class="ed"><path d="M700,150 H730 V215 H760" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ah)"></path></g>
+
+          <!-- Koneksi Replace -> Sync ke Cloud -->
+          <g class="ed"><path d="M910,85 L960,85" stroke="#00d284" stroke-width="2" marker-end="url(#ahg)"></path></g>
+
+          <!-- Jalur Bypass FORCE -->
+          <g class="bp"><path d="M205,115 V45 H495 V115" fill="none" stroke="#ffab00" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#ah)"></path><text x="350" y="38" fill="#ffab00" font-size="11" font-weight="700" text-anchor="middle">MODE FORCE (Bypass Jadwal)</text></g>
+
+          <!-- Node 1: Start Loop -->
+          <g class="flow-node" id="fn-start">
+            <rect x="20" y="125" width="100" height="50" rx="8" fill="#182234" stroke="#334155" stroke-width="2"></rect>
+            <text x="70" y="148" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">Start Loop</text>
+            <text x="70" y="164" fill="#94a3b8" text-anchor="middle" font-size="9" id="live-lbl-queue">Cek Antrean</text>
+          </g>
+
+          <!-- Node 2: Cek Suhu (Thermal Guard) -->
+          <g class="flow-node" id="fn-temp_check">
+            <polygon points="205,115 260,150 205,185 150,150" fill="#182234" stroke="#334155" stroke-width="2"></polygon>
+            <text x="205" y="147" fill="#fff" text-anchor="middle" font-size="11" font-weight="bold">Cek Suhu</text>
+            <text x="205" y="162" fill="#94a3b8" text-anchor="middle" font-size="9" id="live-lbl-temp">&lt; 75°C?</text>
+          </g>
+
+          <!-- Node 3: Cek Waktu / Jadwal -->
+          <g class="flow-node" id="fn-time_check">
+            <polygon points="345,115 400,150 345,185 290,150" fill="#182234" stroke="#334155" stroke-width="2"></polygon>
+            <text x="345" y="147" fill="#fff" text-anchor="middle" font-size="11" font-weight="bold">Cek Jadwal</text>
+            <text x="345" y="162" fill="#94a3b8" text-anchor="middle" font-size="9" id="live-lbl-schedule">01:00-06:00</text>
+          </g>
+
+          <!-- Node 4: Kompresi FFmpeg -->
+          <g class="flow-node" id="fn-compress">
+            <rect x="430" y="120" width="130" height="60" rx="8" fill="#182234" stroke="#334155" stroke-width="2"></rect>
+            <text x="495" y="145" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">Kompresi</text>
+            <text x="495" y="160" fill="#38bdf8" text-anchor="middle" font-size="10">X265 / Image</text>
+            <text x="495" y="172" fill="#00d284" text-anchor="middle" font-weight="600" font-size="8">+ GPS &amp; Live Photo Safe</text>
+          </g>
+
+          <!-- Node 5: Bandingkan Ukuran -->
+          <g class="flow-node" id="fn-compare">
+            <polygon points="645,115 700,150 645,185 590,150" fill="#182234" stroke="#334155" stroke-width="2"></polygon>
+            <text x="645" y="147" fill="#fff" text-anchor="middle" font-size="11" font-weight="bold">Bandingkan</text>
+            <text x="645" y="162" fill="#94a3b8" text-anchor="middle" font-size="9">Hasil &lt; Asli?</text>
+          </g>
+
+          <!-- Node 6A: Replace (Hemat) -->
+          <g class="flow-node" id="fn-replace">
+            <rect x="760" y="60" width="150" height="50" rx="8" fill="#064e3b" stroke="#00d284" stroke-width="2"></rect>
+            <text x="835" y="83" fill="#6ee7b7" text-anchor="middle" font-size="12" font-weight="bold">YA: Replace</text>
+            <text x="835" y="99" fill="#a7f3d0" text-anchor="middle" font-size="9">Ganti Berkas (Hemat)</text>
+          </g>
+
+          <!-- Node 6B: Skip (Boros) -->
+          <g class="flow-node" id="fn-skip">
+            <rect x="760" y="190" width="150" height="50" rx="8" fill="#78350f" stroke="#ffab00" stroke-width="2"></rect>
+            <text x="835" y="213" fill="#fde047" text-anchor="middle" font-size="12" font-weight="bold">TIDAK: Skip</text>
+            <text x="835" y="229" fill="#fef08a" text-anchor="middle" font-size="9">Simpan Asli (Cegah Boros)</text>
+          </g>
+
+          <!-- Node 7: Cloud Backup (Sync) -->
+          <g class="flow-node" id="fn-sync">
+            <rect x="960" y="60" width="150" height="50" rx="8" fill="#182234" stroke="#2196f3" stroke-width="2"></rect>
+            <text x="1035" y="83" fill="#60a5fa" text-anchor="middle" font-size="12" font-weight="bold">☁️ Backup Cloud</text>
+            <text x="1035" y="99" fill="#94a3b8" text-anchor="middle" font-size="9">Rclone MEGA Sync</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="panel">
+        <div class="fc-title">📍 Detail Aktivitas Prosesor Real-Time</div>
+        <div id="process-details-content"><div class="empty-note">Tidak ada proses kompresi aktif saat ini. Menunggu jadwal atau file baru.</div></div>
+      </div>
+
+      <!-- Flowchart Process History / Histori Pengerjaan Flowchart -->
+      <div class="panel" style="margin-top:1.5rem;">
+        <div class="fc-title">📋 Histori Pengerjaan Alur Flowchart &amp; Verifikasi Metadata</div>
+        <p class="fc-desc">Rekam jejak node-node yang telah diselesaikan untuk tiap file foto/video beserta checklist kepastian metadata yang dipreservasi.</p>
+        <div class="files-table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Waktu Selesai</th>
+                <th>Nama Berkas</th>
+                <th>Tipe</th>
+                <th>Node Eksekusi</th>
+                <th>Status Metadata</th>
+                <th>Checklist Metadata Terverifikasi</th>
+                <th>Hasil Ukuran</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-flow-history-body">
+              <tr><td colspan="7" style="text-align:center;color:var(--adm-text-dim);">Memuat riwayat pengerjaan flowchart...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 3: STORAGE ANALYTICS
+         ========================================================================= -->
+    <div id="pane-analytics" class="tab-pane">
+      <div class="analytics-grid">
+        <!-- Reclaimed Space Visualization -->
+        <div class="analytics-card border-accent-green">
+          <div class="analytics-card-title">💾 Efisiensi Ruang Penyimpanan Lokal</div>
+          <div class="progress-group">
+            <div class="progress-labels">
+              <span>Total Dihemat</span>
+              <b id="analytics-saved-mb" class="c-green">0.00 MB</b>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar-fill" id="analytics-progress-bar" style="width: 0%;"></div>
+            </div>
+          </div>
+          <div class="breakdown-row">
+            <span style="color:var(--adm-text-mut);">File Terkompresi (Asli → Hasil):</span>
+            <b id="analytics-success-sizes" style="color:#fff;">0.00 MB → 0.00 MB</b>
+          </div>
+          <div class="breakdown-row">
+            <span style="color:var(--adm-text-mut);">Rasio Penghematan Kompresi:</span>
+            <b id="analytics-avg-ratio" class="c-green">0.0%</b>
+          </div>
+          <div class="breakdown-row">
+            <span style="color:var(--adm-text-mut);">Total Ukuran Seluruh Koleksi Immich:</span>
+            <b id="analytics-orig-bytes">0.00 MB</b>
+          </div>
+        </div>
+
+        <!-- Health & Guard Status -->
+        <div class="analytics-card border-accent-blue">
+          <div class="analytics-card-title">🛡️ Status Perlindungan &amp; Integritas Data</div>
+          <div class="breakdown-row">
+            <span style="color:var(--adm-text-mut);">Atomic Replace (Skip Boros):</span>
+            <b style="color:var(--adm-success);">AKTIF (Zero Corrupt Guarantee)</b>
+          </div>
+          <div class="breakdown-row">
+            <span style="color:var(--adm-text-mut);">Preservasi iPhone Live Photos:</span>
+            <b style="color:var(--adm-info);">AKTIF (ExifTool ContentIdentifier)</b>
+          </div>
+          <div class="breakdown-row">
+            <span style="color:var(--adm-text-mut);">Thermal Guard ODROID-C2:</span>
+            <b id="analytics-thermal-status" style="color:var(--adm-teal);">AKTIF (&lt; 75°C)</b>
+          </div>
+          <div class="breakdown-row">
+            <span style="color:var(--adm-text-mut);">Jadwal Efisiensi Malam:</span>
+            <b id="analytics-schedule-status">01:00 - 06:00 (Aktif)</b>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step-by-Step Logic Narrative (Vertical Top-to-Bottom Flowchart) -->
+      <div class="fc-wrap">
+        <div class="fc-title">🗺️ Alur Arsitektur Logika Sistem (Vertical Pipeline: Atas ke Bawah)</div>
+        <p style="color:var(--adm-text-mut);font-size:0.85rem;margin-bottom:1.5rem;">Diagram eksekusi mendalam dari deteksi file hingga pergantian atomik dan verifikasi cloud sync satu arah tanpa risiko kehilangan data.</p>
+        
+        <div class="vflow-container">
+          <!-- Step 1: Scan & Detect -->
+          <div class="vflow-step">
+            <div class="vflow-node border-blue">
+              <div class="vflow-icon">🔍</div>
+              <div class="vflow-content">
+                <div class="vflow-heading">1. Pemindaian Direktori Immich Upload</div>
+                <div class="vflow-desc">Scanner membaca rekursif <code>/mnt/hdd1/immich/upload/upload</code>, mengabaikan file sementara <code>.tmp</code> / <code>.inprogress</code>, dan mengekstrak daftar file baru yang belum tercatat di <code>optimizer_state.json</code>.</div>
+              </div>
+              <span class="vflow-pill pill-blue">SCANNER</span>
+            </div>
+          </div>
+          <div class="vflow-line"><span class="vflow-arrow">▼</span></div>
+
+          <!-- Step 2: Thermal & Schedule Guard -->
+          <div class="vflow-step">
+            <div class="vflow-node border-yellow">
+              <div class="vflow-icon">🛡️</div>
+              <div class="vflow-content">
+                <div class="vflow-heading">2. Evaluasi Perlindungan (Suhu &amp; Jadwal)</div>
+                <div class="vflow-desc">
+                  <b>Thermal Check:</b> Jika CPU &ge; 75°C, supervisor masuk mode <code>THROTTLED/PAUSE</code> hingga suhu mendingin &le; 65°C.<br>
+                  <b>Schedule Check:</b> Pada mode <code>NORMAL</code>, proses hanya berjalan di jendela jam hemat (01:00 - 06:00). Pada mode <code>FORCE</code>, jadwal di-bypass seketika.
+                </div>
+              </div>
+              <span class="vflow-pill pill-yellow">GATEKEEPER</span>
+            </div>
+          </div>
+          <div class="vflow-line"><span class="vflow-arrow">▼</span></div>
+
+          <!-- Step 3: Metadata Preservation Extract -->
+          <div class="vflow-step">
+            <div class="vflow-node border-teal">
+              <div class="vflow-icon">📍</div>
+              <div class="vflow-content">
+                <div class="vflow-heading">3. Ekstraksi Utuh Metadata &amp; Apple Live Photo Pair</div>
+                <div class="vflow-desc">
+                  Membaca EXIF asli via <code>exiftool</code>: Koordinat GPS (Latitude, Longitude, Altitude), Kamera/Lensa, Tanggal Asli (DateTimeOriginal).<br>
+                  Khusus Apple Live Photo: Mengunci tag <code>ContentIdentifier</code> dan <code>MediaGroupUUID</code> agar sinkronisasi foto-video gerak tetap menyatu di Immich.
+                </div>
+              </div>
+              <span class="vflow-pill pill-teal">METADATA GUARD</span>
+            </div>
+          </div>
+          <div class="vflow-line"><span class="vflow-arrow">▼</span></div>
+
+          <!-- Step 4: Optimization Engine (Split Branch: Video / Photo) -->
+          <div class="vflow-step">
+            <div class="vflow-branch-box">
+              <div class="vflow-branch-title">⚡ 4. Aturan Penjadwalan Konkurensi &amp; Mesin Kompresi (Mutual Exclusion)</div>
+              <div class="vflow-branches">
+                <div class="vflow-branch-card">
+                  <div class="branch-tag">🎬 Video Solo Worker (Maks 1 Video)</div>
+                  <div class="branch-desc">
+                    FFmpeg <code>libx265</code> ultrafast, CRF 26, Max 1080p, 1-thread (stabilisasi ARM64). <b>Aturan Ketat:</b> Saat video dikerjakan, foto mandiri ditahan (0 foto) untuk menjaga suhu &amp; RAM.
+                  </div>
+                </div>
+                <div class="vflow-branch-card">
+                  <div class="branch-tag">📸 Photo Batch Worker (3 Foto Sekaligus)</div>
+                  <div class="branch-desc">
+                    Mengerjakan <b>3 foto sekaligus secara paralel</b> (0 video). Mengurangi dimensi ke maks 2560px dan kompresi kualitas 82 (Lossless chroma subsampling 4:4:4).
+                  </div>
+                </div>
+                <div class="vflow-branch-card" style="border-top:2px solid var(--adm-info);">
+                  <div class="branch-tag" style="color:var(--adm-info);">✨ Live Photo Pair (Prioritas 2 Worker)</div>
+                  <div class="branch-desc">
+                    Pengecualian khusus: Pasangan Live Photo (1 Foto + 1 Video pendamping) diprioritaskan dan dikerjakan <b>bersamaan</b> (2 worker) dengan preservasi tag <code>ContentIdentifier</code>.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="vflow-line"><span class="vflow-arrow">▼</span></div>
+
+          <!-- Step 5: Metadata Re-Injection & GPS Verification -->
+          <div class="vflow-step">
+            <div class="vflow-node border-purple">
+              <div class="vflow-icon">💉</div>
+              <div class="vflow-content">
+                <div class="vflow-heading">5. Re-injeksi Metadata &amp; Verifikasi Validasi Nol Kehilangan GPS</div>
+                <div class="vflow-desc">
+                  ExifTool menyuntikkan kembali seluruh metadata dari file asli ke file hasil kompresi sementara (<code>.opt.tmp</code>).<br>
+                  <b>Zero GPS Loss Guard:</b> Jika file asli memiliki koordinat GPS tetapi file sementara gagal memuat koordinat GPS, proses kompresi seketika <b>DIBATALKAN</b> dan file asli dipertahankan 100%.
+                </div>
+              </div>
+              <span class="vflow-pill pill-purple">GPS VALIDATOR</span>
+            </div>
+          </div>
+          <div class="vflow-line"><span class="vflow-arrow">▼</span></div>
+
+          <!-- Step 6: Atomic Decision (Replace vs Skip) -->
+          <div class="vflow-step">
+            <div class="vflow-branch-box">
+              <div class="vflow-branch-title">⚖️ 6. Evaluasi Ukuran: Apakah Hasil Lebih Hemat?</div>
+              <div class="vflow-branches">
+                <div class="vflow-branch-card branch-success">
+                  <div class="branch-tag" style="color:var(--adm-success);">✓ LEBIH HEMAT (CompSize &lt; OrigSize)</div>
+                  <div class="branch-desc">
+                    <b>Atomic Replace:</b> File asli digantikan secara instan dengan <code>os.Rename</code>. Hemat ruang dicatat dan status file menjadi <code>SUCCESS</code>.
+                  </div>
+                </div>
+                <div class="vflow-branch-card branch-warning">
+                  <div class="branch-tag" style="color:var(--adm-warning);">✗ BOROS (CompSize &ge; OrigSize)</div>
+                  <div class="branch-desc">
+                    <b>Skip Guard:</b> File sementara <code>.opt.tmp</code> dihapus. File asli dipertahankan utuh tanpa sentuhan. Status dicatat sebagai <code>SKIPPED</code>.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="vflow-line"><span class="vflow-arrow">▼</span></div>
+
+          <!-- Step 7: Cloud Sync Engine -->
+          <div class="vflow-step">
+            <div class="vflow-node border-blue">
+              <div class="vflow-icon">☁️</div>
+              <div class="vflow-content">
+                <div class="vflow-heading">7. Sinkronisasi Cloud Satu Arah (Rclone MEGA: /YYYY/MM/DD/)</div>
+                <div class="vflow-desc">
+                  File yang berhasil diproses otomatis dijadwalkan ke antrian Rclone.<br>
+                  • <b>Hierarki Waktu:</b> Disimpan ke remote folder berdasarkan tanggal pengambilan media (contoh: <code>mega:ImmichBackup/2026/10/22/filename.jpg</code>).<br>
+                  • <b>Sinkronisasi Hapus:</b> Jika suatu file dihapus di server lokal Immich, mesin otomatis menghapus file pasangannya di MEGA cloud untuk membebaskan kuota.
+                </div>
+              </div>
+              <span class="vflow-pill pill-blue">ONE-WAY SYNC</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB: DEVICE MONITOR (Jendela Pemantauan ODROID-C2 - Safe Read-Only)
+         ========================================================================= -->
+    <div id="pane-device" class="tab-pane">
+      <div class="settings-header-banner" style="border-left:4px solid var(--adm-teal);">
+        <h2>🖥️ Jendela Pemantau Perangkat (ODROID-C2 Telemetry)</h2>
+        <p>Pemantauan kondisi fisik hardware, beban CPU, memori RAM, suhu prosesor, dan ruang disk secara aman (Read-Only) tanpa membuka celah terminal atau akses root.</p>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="stats-grid">
+        <div class="stat-card border-accent-blue">
+          <div class="stat-val c-blue" id="dev-cpu-temp">--°C</div>
+          <div class="stat-lbl">Suhu CPU (Sysfs)</div>
+        </div>
+        <div class="stat-card border-accent-teal">
+          <div class="stat-val c-teal" id="dev-ram-usage">-- / -- MB</div>
+          <div class="stat-lbl">RAM Terpakai</div>
+        </div>
+        <div class="stat-card border-accent-purple">
+          <div class="stat-val c-purple" id="dev-load-avg">0.00 / 0.00 / 0.00</div>
+          <div class="stat-lbl">Load Avg (1m, 5m, 15m)</div>
+        </div>
+        <div class="stat-card border-accent-green">
+          <div class="stat-val c-green" id="dev-uptime">--</div>
+          <div class="stat-lbl">Waktu Operasional (Uptime)</div>
+        </div>
+      </div>
+
+      <!-- Hardware Details Card -->
+      <div class="settings-grid" style="margin-top:1.5rem;">
+        <!-- Specs & CPU Info -->
+        <div class="analytics-card border-accent-blue">
+          <div class="analytics-card-title">⚙️ Informasi Perangkat &amp; Proses</div>
+          <div class="breakdown-row">
+            <span style="color:var(--adm-text-mut);">Arsitektur Perangkat:</span>
+            <b id="dev-arch" style="color:#fff;">ODROID-C2 (ARM Cortex-A53 64-bit)</b>
+          </div>
+          <div class="breakdown-row">
+            <span style="color:var(--adm-text-mut);">Hostname:</span>
+            <b id="dev-hostname" style="color:var(--adm-info);">dietpi</b>
+          </div>
+          <div class="breakdown-row">
+            <span style="color:var(--adm-text-mut);">Process PID Optimizer:</span>
+            <b id="dev-pid" style="color:var(--adm-teal);">--</b>
+          </div>
+          <div class="breakdown-row">
+            <span style="color:var(--adm-text-mut);">Batas Suhu Maksimal:</span>
+            <b id="dev-max-temp" style="color:var(--adm-danger);">75.0°C (Auto-Cooldown @ 65°C)</b>
+          </div>
+          <div class="breakdown-row">
+            <span style="color:var(--adm-text-mut);">Status Keamanan:</span>
+            <b style="color:var(--adm-success);">🔒 Read-Only Telemetry (Zero Remote Exec)</b>
+          </div>
+        </div>
+
+        <!-- Storage Disks (Root & Media HDD) -->
+        <div class="analytics-card border-accent-purple">
+          <div class="analytics-card-title">💽 Penggunaan Ruang Penyimpanan (Disk Mounts)</div>
+          
+          <!-- Root filesystem -->
+          <div style="margin-bottom:1rem;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:0.85rem;">
+              <span>Root OS (<code>/</code>):</span>
+              <b id="dev-root-disk-text">-- GB / -- GB (--%)</b>
+            </div>
+            <div style="background:var(--adm-border);border-radius:4px;height:8px;overflow:hidden;">
+              <div id="dev-root-disk-bar" style="background:var(--adm-primary);height:100%;width:0%;"></div>
+            </div>
+          </div>
+
+          <!-- Media HDD mount -->
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:0.85rem;">
+              <span>Media Library (<code>/mnt/hdd1</code>):</span>
+              <b id="dev-media-disk-text">-- GB / -- GB (--%)</b>
+            </div>
+            <div style="background:var(--adm-border);border-radius:4px;height:8px;overflow:hidden;">
+              <div id="dev-media-disk-bar" style="background:var(--adm-teal);height:100%;width:0%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 4: LIVE SETTINGS / CONTROLS (Web UI Full Configuration Panel)
+         ========================================================================= -->
+    <div id="pane-settings" class="tab-pane">
+      <div id="settings-alert" class="alert-box" style="display:none;"></div>
+      
+      <div class="settings-header-banner">
+        <h2>⚙️ Pengaturan Lengkap Sistem &amp; Mesin Optimizer</h2>
+        <p>Seluruh parameter disimpan langsung ke <code>config.json</code> melalui REST API backend Go dan dimuat ulang ke memori secara dinamis tanpa perlu merestart program.</p>
+      </div>
+
+      <div class="settings-grid">
+        <!-- 1. Jalur Penyimpanan & Direktori Immich -->
+        <div class="setting-card border-accent-blue">
+          <div class="setting-card-title">📁 Jalur Direktori (Storage Paths)</div>
+          <div class="setting-row">
+            <label for="cfg-storage-upload">Folder Upload Immich:</label>
+            <input type="text" id="cfg-storage-upload" placeholder="/mnt/hdd1/immich/upload/upload">
+            <span class="setting-hint">Lokasi folder library foto/video yang diunggah ke Immich</span>
+          </div>
+          <div class="setting-row">
+            <label for="cfg-storage-state">File Database State:</label>
+            <input type="text" id="cfg-storage-state" placeholder="optimizer_state.json">
+            <span class="setting-hint">Menyimpan riwayat file yang telah diproses</span>
+          </div>
+          <div class="setting-row">
+            <label for="cfg-storage-log">Folder Log:</label>
+            <input type="text" id="cfg-storage-log" placeholder="logs">
+            <span class="setting-hint">Lokasi berkas log supervisor, video, foto, dan rclone</span>
+          </div>
+        </div>
+
+        <!-- 2. Optimasi Video (FFmpeg H.265 / H.264) -->
+        <div class="setting-card border-accent-purple">
+          <div class="setting-card-title">🎬 Optimasi Video (FFmpeg H.265 / H.264)</div>
+          <div class="setting-row">
+            <label for="cfg-video-codec">Video Codec:</label>
+            <select id="cfg-video-codec">
+              <option value="libx265">libx265 (HEVC) - Hemat Ruang Maksimal (Rekomendasi)</option>
+              <option value="libx264">libx264 (AVC/H.264) - Kompatibilitas Tertinggi</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <label for="cfg-video-preset">Encoder Preset:</label>
+            <select id="cfg-video-preset">
+              <option value="ultrafast">ultrafast - Sangat Cepat &amp; Ringan CPU ODROID-C2 (Rekomendasi)</option>
+              <option value="superfast">superfast</option>
+              <option value="veryfast">veryfast</option>
+              <option value="faster">faster</option>
+              <option value="fast">fast</option>
+            </select>
+          </div>
+          <div class="setting-grid-2">
+            <div class="setting-row">
+              <label for="cfg-video-crf">Constant Rate Factor (CRF):</label>
+              <input type="number" id="cfg-video-crf" min="15" max="38" placeholder="26">
+              <span class="setting-hint">Rekomendasi: 24–28 (Lebih tinggi = lebih hemat)</span>
+            </div>
+            <div class="setting-row">
+              <label for="cfg-video-height">Maksimal Resolusi Tinggi (px):</label>
+              <select id="cfg-video-height">
+                <option value="1080">1080p (Full HD - Rekomendasi)</option>
+                <option value="720">720p (HD - Sangat Hemat)</option>
+                <option value="1440">1440p (2K Quad HD)</option>
+                <option value="2160">2160p (4K Ultra HD)</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-grid-2">
+            <div class="setting-row">
+              <label for="cfg-video-threads">Thread Kompresi Video:</label>
+              <input type="number" id="cfg-video-threads" min="1" max="4" placeholder="1">
+              <span class="setting-hint">1 thread direkomendasikan untuk stabilitas RAM &amp; suhu</span>
+            </div>
+            <div class="setting-row">
+              <label for="cfg-video-workers">Pekerja Video Simultan:</label>
+              <input type="number" id="cfg-video-workers" min="1" max="4" placeholder="1">
+              <span class="setting-hint">1 worker optimal untuk ARM64 2GB RAM</span>
+            </div>
+          </div>
+          <div class="setting-info-box" style="margin-top:12px;">
+            📍 <b>Preservasi Penuh Geolokasi &amp; Metadata Video:</b> FFmpeg dikonfigurasi dengan flag <code>-map_metadata 0</code> dan <code>-movflags +use_metadata_tags</code>, dilanjutkan dengan injeksi tag ExifTool (<code>Keys:GPSCoordinates</code>, <code>UserData:GPSCoordinates</code>, <code>CreationDate</code> UTC) sehingga peta lokasi dan tanggal perekaman video di Immich dijamin 100% tidak hilang.
+          </div>
+        </div>
+
+        <!-- 3. Optimasi Foto & Apple Live Photos -->
+        <div class="setting-card border-accent-teal">
+          <div class="setting-card-title">📸 Optimasi Foto &amp; Apple Live Photos</div>
+          <div class="setting-grid-2">
+            <div class="setting-row">
+              <label for="cfg-photo-quality">Kualitas Foto (1-100):</label>
+              <input type="number" id="cfg-photo-quality" min="20" max="100" placeholder="82">
+              <span class="setting-hint">Rekomendasi: 80–85 (Kualitas jernih, hemat ~80%)</span>
+            </div>
+            <div class="setting-row">
+              <label for="cfg-photo-dim">Dimensi Maksimal Foto (px):</label>
+              <input type="number" id="cfg-photo-dim" min="1024" max="8000" placeholder="2560">
+              <span class="setting-hint">Rekomendasi: 2560px / 3840px</span>
+            </div>
+          </div>
+          <div class="setting-row">
+            <label for="cfg-photo-workers">Pekerja Foto Simultan:</label>
+            <input type="number" id="cfg-photo-workers" min="1" max="4" placeholder="3">
+            <span class="setting-hint">Rekomendasi: 3 workers (Mengerjakan hingga 3 foto sekaligus secara paralel)</span>
+          </div>
+          <div class="setting-info-box">
+            📍 <b>Preservasi Geolokasi (GPS) &amp; iPhone Live Photos:</b> Koordinat lokasi (Latitude, Longitude, Altitude), EXIF asli, dan pairing identifier Apple Live Photo (ContentIdentifier, MediaGroupUUID) disalin utuh via <code>exiftool</code> dengan sistem <b>Zero GPS Loss Guard</b> (file asli tidak akan diganti jika koordinat GPS gagal terbaca pada hasil kompresi).
+          </div>
+        </div>
+
+        <!-- 4. Thermal Guard ODROID-C2 -->
+        <div class="setting-card border-accent-red">
+          <div class="setting-card-title">🌡️ Proteksi Suhu (ODROID-C2 Thermal Guard)</div>
+          <div class="setting-row-flex">
+            <label for="cfg-thermal-enabled">Aktifkan Thermal Guard:</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="cfg-thermal-enabled">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <label for="cfg-thermal-max">Batas Suhu Maksimal (°C):</label>
+            <input type="number" id="cfg-thermal-max" min="45" max="95" step="1" placeholder="75">
+            <span class="setting-hint">Kompresi dijeda otomatis jika CPU mencapai suhu ini (default: 75°C)</span>
+          </div>
+          <div class="setting-row">
+            <label for="cfg-thermal-cool">Suhu Cooldown (°C):</label>
+            <input type="number" id="cfg-thermal-cool" min="35" max="85" step="1" placeholder="65">
+            <span class="setting-hint">Kompresi dilanjutkan kembali saat CPU mendingin ke suhu ini (default: 65°C)</span>
+          </div>
+          <div class="setting-row">
+            <label for="cfg-thermal-path">File Sensor Suhu Sysfs:</label>
+            <input type="text" id="cfg-thermal-path" placeholder="/sys/class/thermal/thermal_zone0/temp">
+          </div>
+        </div>
+
+        <!-- 5. Jadwal Operasional -->
+        <div class="setting-card border-accent-yellow">
+          <div class="setting-card-title">⏰ Jadwal Operasional (Schedule Window)</div>
+          <div class="setting-row-flex">
+            <label for="cfg-schedule-enabled">Batasi Jadwal Operasional:</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="cfg-schedule-enabled">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-grid-2">
+            <div class="setting-row">
+              <label for="cfg-schedule-start">Jam Mulai (0-23):</label>
+              <input type="number" id="cfg-schedule-start" min="0" max="23" placeholder="1">
+              <span class="setting-hint">Misal: 1 (01:00 dini hari)</span>
+            </div>
+            <div class="setting-row">
+              <label for="cfg-schedule-end">Jam Selesai (0-23):</label>
+              <input type="number" id="cfg-schedule-end" min="0" max="23" placeholder="6">
+              <span class="setting-hint">Misal: 6 (06:00 pagi)</span>
+            </div>
+          </div>
+          <div class="setting-info-box">
+            ℹ️ Dalam mode <b>NORMAL</b>, kompresi hanya berjalan pada jam ini agar server bebas beban di siang hari. Gunakan mode <b>FORCE</b> untuk melewati jadwal kapan pun.
+          </div>
+        </div>
+
+        <!-- 6. Server & Keamanan Web UI -->
+        <div class="setting-card border-accent-blue">
+          <div class="setting-card-title">🌐 Server &amp; Keamanan Web UI</div>
+          <div class="setting-row">
+            <label for="cfg-server-port">Port Web UI:</label>
+            <input type="number" id="cfg-server-port" min="1" max="65535" placeholder="5555">
+            <span class="setting-hint">Default: 5555 (Perubahan port aktif setelah service direstart)</span>
+          </div>
+          <div class="setting-row">
+            <label for="cfg-server-host">Host Binding:</label>
+            <input type="text" id="cfg-server-host" placeholder="0.0.0.0">
+            <span class="setting-hint">Gunakan 0.0.0.0 agar dapat diakses dari LAN/jaringan lokal</span>
+          </div>
+          <div class="setting-row-flex">
+            <label for="cfg-server-auth">Wajibkan Password (Auth):</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="cfg-server-auth">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <label for="cfg-new-password">Ganti Password Admin:</label>
+            <input type="password" id="cfg-new-password" placeholder="Kosongkan jika tidak ingin mengubah password">
+            <span class="setting-hint">Password otomatis di-hash SHA-256 oleh server Go</span>
+          </div>
+          <div class="setting-row">
+            <label for="cfg-password-hint">Hint / Petunjuk Password:</label>
+            <input type="text" id="cfg-password-hint" placeholder="admin (default)">
+          </div>
+        </div>
+
+        <!-- 7. Cloud Backup (Rclone) -->
+        <div class="setting-card border-accent-info">
+          <div class="setting-card-title">☁️ Backup Cloud (Rclone MEGA)</div>
+          <div class="setting-row-flex">
+            <label for="cfg-backup-enabled">Aktifkan Backup Cloud:</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="cfg-backup-enabled">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting-row">
+            <label for="cfg-backup-remote">Remote Target Rclone:</label>
+            <input type="text" id="cfg-backup-remote" placeholder="mega:ImmichBackup">
+            <span class="setting-hint">Target upload otomatis diorganisir ke subfolder tanggal <code>/YYYY/MM/DD/</code> berdasarkan EXIF media</span>
+          </div>
+          <div class="setting-row">
+            <label for="cfg-backup-args">Argumen Tambahan Rclone:</label>
+            <input type="text" id="cfg-backup-args" placeholder="--transfers=1 --checkers=2 --fast-list --bwlimit=5M">
+            <span class="setting-hint">Pembatasan bandwidth &amp; thread untuk kestabilan jaringan</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="settings-actions-panel">
+        <button class="settings-btn save-btn" onclick="saveConfig()">💾 Simpan Semua Pengaturan</button>
+        <button class="settings-btn reload-btn" onclick="loadConfig()">🔄 Muat Ulang dari Berkas</button>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 5: SYSTEM LOGS
+         ========================================================================= -->
+    <div id="pane-logs" class="tab-pane">
+      <div class="log-viewer-wrapper">
+        <div class="log-header">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <label for="log-selector" style="font-size:0.82rem;color:var(--adm-text-mut);">Pilih Log:</label>
+            <select id="log-selector" onchange="loadLog(this.value)">
+              <option value="supervisor">Supervisor Engine</option>
+              <option value="video">Video Worker</option>
+              <option value="photo">Photo Worker</option>
+              <option value="backup">Backup Rclone</option>
+              <option value="scanner">File Scanner</option>
+            </select>
+          </div>
+          <button onclick="loadLog(document.getElementById('log-selector').value)">🔄 Refresh Log</button>
+        </div>
+        <div class="log-content" id="log-display">Memuat log...</div>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 6: CLOUD BACKUP (MEGA)
+         ========================================================================= -->
+    <div id="pane-sync" class="tab-pane">
+      <div class="fc-wrap">
+        <div class="fc-title">☁️ Alur Kerja Sinkronisasi Cloud (Rclone MEGA)</div>
+        <svg class="fc-svg" id="sync-svg" viewBox="0 0 560 120" preserveAspectRatio="xMidYMid meet" style="min-width:480px">
+          <defs>
+            <marker id="sah" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#94a3b8"></path></marker>
+          </defs>
+          <g class="ed"><path d="M135,60 L225,60" stroke="#94a3b8" marker-end="url(#sah)"></path></g>
+          <g class="ed"><path d="M335,60 L425,60" stroke="#94a3b8" marker-end="url(#sah)"></path></g>
+          <g class="nd"><rect x="25" y="38" width="110" height="44" rx="6" fill="#182234" stroke="#334155"></rect><text x="80" y="55" fill="#fff" text-anchor="middle" font-size="12">File Lokal</text><text x="80" y="70" fill="#94a3b8" text-anchor="middle" font-size="10">/mnt/hdd1/...</text></g>
+          <g class="nd"><rect x="225" y="38" width="110" height="44" rx="6" fill="#182234" stroke="#334155"></rect><text x="280" y="55" fill="#fff" text-anchor="middle" font-size="12">Rclone</text><text x="280" y="70" fill="#94a3b8" text-anchor="middle" font-size="10">Sync Engine</text></g>
+          <g class="nd rep"><rect x="420" y="38" width="120" height="44" rx="6" fill="#064e3b" stroke="#00d284"></rect><text x="480" y="55" fill="#fff" text-anchor="middle" font-size="12">MEGA Cloud</text><text x="480" y="70" fill="#94a3b8" text-anchor="middle" font-size="10">mega:Immich</text></g>
+        </svg>
+      </div>
+
+      <div class="controls-row">
+        <div class="shortcuts-panel">
+          <button class="shortcut-btn" onclick="syncNow()">☁️ Sync Sekarang</button>
+          <button class="shortcut-btn" id="btn-sync-pause" onclick="pauseSync(true)">⏸️ Pause Sync</button>
+          <button class="shortcut-btn active-normal" id="btn-sync-resume" onclick="pauseSync(false)">▶️ Resume Sync</button>
+          <button class="shortcut-btn" onclick="retrySync()">🔁 Retry Gagal</button>
+          <button class="shortcut-btn active-normal" id="btn-sync-normal" onclick="setSyncMode('normal')">⚙️ Sync Normal</button>
+          <button class="shortcut-btn" id="btn-sync-force" onclick="setSyncMode('force')">🔥 Sync Force</button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card border-accent-blue"><div class="stat-val c-blue" id="sync-total-files">0</div><div class="stat-lbl">Total Ter-Backup</div></div>
+        <div class="stat-card border-accent-green"><div class="stat-val c-green" id="sync-total-size">0.00 GB</div><div class="stat-lbl">Ukuran di Cloud</div></div>
+        <div class="stat-card border-accent-yellow"><div class="stat-val c-yellow" id="sync-queue">0</div><div class="stat-lbl">Antrian Upload</div></div>
+        <div class="stat-card border-accent-red"><div class="stat-val c-red" id="sync-errors">0</div><div class="stat-lbl">Gagal Upload</div></div>
+      </div>
+
+      <div class="files-table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Nama File</th>
+              <th>Tipe</th>
+              <th>Ukuran Akhir</th>
+              <th>Status Backup</th>
+              <th>Tujuan Cloud (/yyyy/mm/dd/)</th>
+              <th>Waktu</th>
+            </tr>
+          </thead>
+          <tbody id="tbl-sync-body">
+            <tr><td colspan="6" style="text-align:center;color:var(--adm-text-dim);">Memuat riwayat backup...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 7: PANDUAN & HELP
+         ========================================================================= -->
+    <div id="pane-help" class="tab-pane">
+      <div class="panel border-accent-blue">
+        <h3 class="h-blue">🛠️ Arsitektur Mandiri ODROID-C2 (Golang Native)</h3>
+        <ul>
+          <li><b>Ringan Tanpa Python:</b> Seluruh backend berjalan sebagai binary mandiri Go dengan konsumsi memori hanya ~10–15 MB RAM (menghindari OOM crash pada RAM 2GB).</li>
+          <li><b>Preservasi Geolokasi (GPS) Terjamin:</b> Koordinat lokasi foto &amp; video (EXIF GPS IFD, QuickTime Keys, UserData) dipreservasi utuh dengan verifikasi otomatis. Jika file asli memiliki lokasi namun hasil kompresi gagal menyalinnya, sistem otomatis membatalkan penggantian (Zero GPS Loss Protection).</li>
+          <li><b>Preservasi Live Photos:</b> Seluruh metadata iPhone (ContentIdentifier, MediaGroupUUID, QuickTime maker tags) disalin utuh via <code>exiftool</code>.</li>
+          <li><b>Atomic Replace (Skip Boros):</b> File hasil kompresi hanya akan menggantikan file asli jika ukurannya terbukti <b>lebih kecil</b>. Jika hasil lebih besar, file asli tetap utuh dan ditandai <b>Skip (Boros)</b>.</li>
+          <li><b>Flowchart Real-Life:</b> Tab <i>Flowchart Monitor</i> menyala secara real-time mengikuti node proses yang sedang dieksekusi CPU ODROID-C2.</li>
+          <li><b>Auto-Run Tiap Boot:</b> Telah terintegrasi dengan service systemd <code>immich-optimizer.service</code> sehingga otomatis aktif tanpa perlu terminal.</li>
+        </ul>
+      </div>
+
+      <div class="panel border-accent-green">
+        <h3 class="h-green">⚡ Panduan Service Auto-Run Systemd</h3>
+        <ul>
+          <li><b>Cek Status Service:</b> <code>systemctl status immich-optimizer.service</code></li>
+          <li><b>Restart Service:</b> <code>systemctl restart immich-optimizer.service</code></li>
+          <li><b>Pantau Live Logs:</b> <code>journalctl -u immich-optimizer.service -f</code></li>
+          <li><b>Installer Otomatis:</b> Jalankan <code>./install-service.sh</code> di folder server.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

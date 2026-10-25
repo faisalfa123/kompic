@@ -1,0 +1,43 @@
+{
+  "server": {
+    "host": "0.0.0.0",
+    "port": 5555,
+    "auth_enabled": true,
+    "password_hash": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+    "password_hint": "admin (default)"
+  },
+  "storage": {
+    "immich_upload_dir": "/mnt/hdd1/immich/upload/upload",
+    "state_file_path": "optimizer_state.json",
+    "log_dir": "logs"
+  },
+  "compression": {
+    "mode": "force",
+    "video_codec": "libx265",
+    "video_preset": "ultrafast",
+    "video_crf": 26,
+    "video_max_height": 1080,
+    "video_threads": 1,
+    "photo_quality": 82,
+    "photo_max_dim": 2560,
+    "max_video_workers": 1,
+    "max_photo_workers": 3
+  },
+  "thermal": {
+    "enabled": true,
+    "max_temp_c": 75,
+    "cooldown_temp_c": 65,
+    "thermal_zone_path": "/sys/class/thermal/thermal_zone0/temp"
+  },
+  "schedule": {
+    "enabled": true,
+    "start_hour": 1,
+    "end_hour": 6
+  },
+  "backup": {
+    "enabled": true,
+    "mode": "force",
+    "rclone_remote": "mega:ImmichBackup",
+    "rclone_args": "--transfers=1 --checkers=2 --fast-list --bwlimit=5M"
+  }
+}
