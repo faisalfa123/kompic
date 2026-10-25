@@ -1,0 +1,2 @@
+#!/bin/bash
+sqlite3 /opt/media-optimizer/db/media-optimizer.sqlite "INSERT OR REPLACE INTO runtime_state (key, value) VALUES ('$1', '$2');"

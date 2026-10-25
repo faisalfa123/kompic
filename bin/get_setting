@@ -1,0 +1,3 @@
+#!/bin/bash
+VAL=$(sqlite3 /opt/media-optimizer/db/media-optimizer.sqlite "SELECT value FROM settings WHERE key='$1';")
+echo "${VAL:-$2}"

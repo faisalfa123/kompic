@@ -1,0 +1,12 @@
+[Unit]
+Description=Media Optimizer UI
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/php -S 0.0.0.0:8090 -t /opt/media-optimizer/ui
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
