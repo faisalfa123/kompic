@@ -12,7 +12,7 @@
     "log_dir": "logs"
   },
   "compression": {
-    "mode": "force",
+    "mode": "normal",
     "video_codec": "libx265",
     "video_preset": "ultrafast",
     "video_crf": 26,
@@ -25,14 +25,14 @@
   },
   "thermal": {
     "enabled": true,
-    "max_temp_c": 75,
-    "cooldown_temp_c": 65,
+    "max_temp_c": 69,
+    "cooldown_temp_c": 60,
     "thermal_zone_path": "/sys/class/thermal/thermal_zone0/temp"
   },
   "schedule": {
     "enabled": true,
-    "start_hour": 1,
-    "end_hour": 6
+    "start_hour": 22,
+    "end_hour": 8
   },
   "backup": {
     "enabled": true,
