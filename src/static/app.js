@@ -508,6 +508,44 @@ function refreshData() {
         if (dRootText) dRootText.innerText = `${sd.root_disk_used} / ${sd.root_disk_total} (${sd.root_disk_pct}%)`;
         if (dRootBar) dRootBar.style.width = `${sd.root_disk_pct}%`;
 
+      // --- Render 4-Core CPU Gauges ---
+      if (data.sys_detailed && data.sys_detailed.cores) {
+        data.sys_detailed.cores.forEach((c, idx) => {
+          const pctEl = document.getElementById("core-pct-" + idx);
+          const barEl = document.getElementById("core-bar-" + idx);
+          if (pctEl) pctEl.innerText = Math.round(c.load_pct) + "%";
+          if (barEl) {
+            barEl.style.width = Math.min(100, Math.max(5, c.load_pct)) + "%";
+            barEl.style.background = c.load_pct > 80 ? "#f83245" : (c.load_pct > 40 ? "#fbbf24" : "#00d284");
+          }
+        });
+      }
+
+      // --- Render Active Worker Threads Table ---
+      if (data.sys_detailed && data.sys_detailed.threads) {
+        const tbl = document.getElementById("tbl-threads-body");
+        if (tbl) {
+          let html = "";
+          data.sys_detailed.threads.forEach(t => {
+            const statusColor = t.status.includes("RUNNING") || t.status.includes("ACTIVE") ? "#00d284; font-weight:700;" : (t.status.includes("MONITORING") ? "#38bdf8;" : "#94a3b8;");
+            html += `<tr><td style='font-weight:600; color:#fff;'>🧵 ${t.name}</td><td><span style='background:#1e293b; padding:2px 8px; border-radius:4px; font-size:0.75rem; color:#cbd5e1;'>${t.type}</span></td><td>${t.task}</td><td><code style='color:#a855f7;'>${t.affinity}</code></td><td><span style='color:#fbbf24; font-size:0.8rem;'>${t.priority}</span></td><td style='color:${statusColor}'>${t.status}</td></tr>`;
+          });
+          tbl.innerHTML = html;
+        }
+      }
+
+      // Update Help Tab Specs Mirror
+      if (data.sys_detailed) {
+        const sd = data.sys_detailed;
+        const hArch = document.getElementById("help-dev-arch");
+        const hHost = document.getElementById("help-dev-hostname");
+        const hPid = document.getElementById("help-dev-pid");
+        if (hArch && sd.arch) hArch.innerText = sd.arch;
+        if (hHost && sd.hostname) hHost.innerText = sd.hostname;
+        if (hPid && sd.process_pid) hPid.innerText = "PID: " + sd.process_pid;
+      }
+
+
         const dMediaText = document.getElementById("dev-media-disk-text");
         const dMediaBar = document.getElementById("dev-media-disk-bar");
         if (dMediaText) dMediaText.innerText = `${sd.media_disk_used} / ${sd.media_disk_total} (${sd.media_disk_pct}%)`;
@@ -1092,7 +1130,9 @@ function fetchNewsTopic() {
 
 
 
-// --- Sidebar Multi-Layer Pixel Art Engine & News Topic Carousel ---
+
+
+// --- Sidebar Regenerative Multi-Layer Pixel Art Engine (4 Lanskap Unik) ---
 let newsItems = [
   {
     title: "Massa mengawal aspirasi & situasi politik di kawasan Bundaran HI Jakarta",
@@ -1101,46 +1141,41 @@ let newsItems = [
     date: "Isu Terkini"
   },
   {
-    title: "BMKG: Peringatan dini potensi hujan lebat & genangan di Jabodetabek",
+    title: "BMKG: Peringatan dini potensi hujan lebat & cuaca ekstrem di pegunungan",
     theme: "hujan",
-    tag: "CUACA & BANJIR",
+    tag: "BMKG & CUACA",
     date: "Prakiraan 1 Minggu"
   },
   {
-    title: "Presiden pantau stabilitas pangan dan percepatan pembangunan nasional",
-    theme: "nasional",
-    tag: "AGRO & NASIONAL",
-    date: "Berita Nasional"
+    title: "IHSG & Pasar Modal bergerak dinamis, investasi ekonomi digital menguat",
+    theme: "ekonomi",
+    tag: "PASAR & BISNIS",
+    date: "Pasar Keuangan"
   },
   {
-    title: "IHSG bergerak dinamis, pergerakan investasi dan ekonomi digital menguat",
-    theme: "ekonomi",
-    tag: "FINANSIAL & BISNIS",
-    date: "Pasar Keuangan"
+    title: "Ketahanan pangan nasional & panen raya terasering sawah Nusantara diperkuat",
+    theme: "nasional",
+    tag: "AGRO & PANGAN",
+    date: "Ketahanan Pangan"
   }
 ];
 let currentNewsIdx = 0;
 let currentTheme = "demo";
 
-let layerStars = [];
-for (let i = 0; i < 25; i++) {
-  layerStars.push({ x: Math.random() * 226, y: Math.random() * 50, alpha: Math.random() });
+// Partikel animasi
+let stars = [];
+for (let i = 0; i < 30; i++) {
+  stars.push({ x: Math.random() * 226, y: Math.random() * 55, a: Math.random() });
 }
-
-let layerCloudsBack = [
-  { x: 15, y: 18, w: 35, speed: 0.15 },
-  { x: 120, y: 10, w: 45, speed: 0.12 }
-];
-
-let layerCloudsFront = [
-  { x: 40, y: 28, w: 55, speed: 0.35 },
-  { x: 160, y: 22, w: 60, speed: 0.28 }
-];
-
-let layerRain = [];
-for (let i = 0; i < 40; i++) {
-  layerRain.push({ x: Math.random() * 226, y: Math.random() * 125, speed: 4 + Math.random() * 3 });
+let rainDrops = [];
+for (let i = 0; i < 45; i++) {
+  rainDrops.push({ x: Math.random() * 226, y: Math.random() * 125, s: 4 + Math.random() * 3 });
 }
+let cloudPuffs = [
+  { x: 10, y: 15, w: 45, s: 0.2 },
+  { x: 90, y: 25, w: 55, s: 0.15 },
+  { x: 170, y: 10, w: 40, s: 0.25 }
+];
 
 function initSidebarPixelDiorama() {
   const canvas = document.getElementById("sidebarPixelCanvas");
@@ -1152,172 +1187,223 @@ function initSidebarPixelDiorama() {
   function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // ==========================================
-    // LAYER 1: LANGIT & LATAR KHUSUS TEMA (SANGAT BERBEDA TIAP TEMA)
-    // ==========================================
-    let sky = ctx.createLinearGradient(0, 0, 0, 125);
+    // ========================================================
+    // LANSKAP 1: BUNDARAN HI & PATUNG SELAMAT DATANG (TEMA DEMO)
+    // ========================================================
     if (currentTheme === "demo") {
-      // TEMA 1: AKSI BUNDARAN HI - Langit Senja Merah Oranye Berapi
-      sky.addColorStop(0, "#450a0a");
-      sky.addColorStop(0.5, "#7f1d1d");
-      sky.addColorStop(1, "#b45309");
-    } else if (currentTheme === "hujan") {
-      // TEMA 2: BMKG HUJAN - Langit Badai Kelabu Petir
-      sky.addColorStop(0, "#020617");
-      sky.addColorStop(0.5, "#0f172a");
-      sky.addColorStop(1, "#1e293b");
-    } else if (currentTheme === "ekonomi") {
-      // TEMA 3: EKONOMI/IHSG - Langit Hijau Cyberpunk Matrix
-      sky.addColorStop(0, "#022c22");
-      sky.addColorStop(0.5, "#064e3b");
-      sky.addColorStop(1, "#047857");
-    } else {
-      // TEMA 4: NASIONAL - Langit Siang Terang Biru Tropis Indonesia
-      sky.addColorStop(0, "#0284c7");
-      sky.addColorStop(0.6, "#38bdf8");
-      sky.addColorStop(1, "#bae6fd");
-    }
-    ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Langit Senja Merah Oranye Jakarta
+      let g = ctx.createLinearGradient(0, 0, 0, 125);
+      g.addColorStop(0, "#450a0a");
+      g.addColorStop(0.4, "#7f1d1d");
+      g.addColorStop(1, "#b45309");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 226, 125);
 
-    // Matahari Siang / Bulan Malam Khusus
-    if (currentTheme === "nasional") {
-      // Matahari Terang Pixel
-      ctx.fillStyle = "#fef08a";
-      ctx.fillRect(180, 15, 18, 18);
-      ctx.fillStyle = "#fde047";
-      ctx.fillRect(182, 17, 14, 14);
-    } else if (currentTheme === "demo") {
-      // Matahari Terbenam Senja
+      // Matahari Senja Tenggelam
       ctx.fillStyle = "#f97316";
-      ctx.fillRect(25, 45, 24, 24);
-    } else if (currentTheme === "hujan") {
-      // Kilatan Petir Sesekali
-      if (Math.random() < 0.04) {
-        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
+      ctx.fillRect(35, 45, 20, 20);
+
+      // Siluet Gedung Pencakar Langit Thamrin-Sudirman di Latar
+      ctx.fillStyle = "#27171d";
+      ctx.fillRect(10, 60, 24, 65);
+      ctx.fillRect(40, 52, 28, 73);
+      ctx.fillRect(158, 55, 30, 70);
+      ctx.fillRect(194, 62, 22, 63);
+
+      // Monumen Bundaran HI & Kolam Air Mancur Melingkar
+      ctx.fillStyle = "#1e1329";
+      ctx.fillRect(80, 85, 66, 40); // Kolam bundaran
+      ctx.fillStyle = "#0284c7";
+      ctx.fillRect(85, 92, 56, 12); // Air kolam
+      // Pancuran air pixel menyembur
+      const fTime = Date.now() / 200;
+      const fH = Math.sin(fTime) * 3;
+      ctx.fillStyle = "rgba(224, 242, 254, 0.75)";
+      ctx.fillRect(102, 85 - fH, 3, 7 + fH);
+      ctx.fillRect(121, 85 - fH, 3, 7 + fH);
+
+      // Tugu & Patung Selamat Datang (Dua orang melambaikan tangan)
+      ctx.fillStyle = "#0a0a14";
+      ctx.fillRect(110, 50, 6, 42); // Pilar tugu
+      ctx.fillRect(107, 44, 12, 6);  // Dasar patung
+      ctx.fillStyle = "#fbbf24";     // Sosok patung emas
+      ctx.fillRect(110, 36, 3, 8);   // Figur pria
+      ctx.fillRect(114, 37, 3, 7);   // Figur wanita
+
+      // Demonstran & Bendera Merah Putih Berkibar
+      const wave = Math.sin(Date.now() / 220) * 3;
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillRect(68, 68, 2, 48); // Tiang
+      ctx.fillStyle = "#ef4444";
+      ctx.fillRect(70, 68 + wave, 22, 6);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(70, 74 + wave, 22, 6);
+
+      // Kerumunan Massa Berorasi
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(60, 98, 5, 8);
+      ctx.fillRect(72, 97, 5, 8);
+      ctx.fillRect(78, 98, 5, 8);
+      ctx.fillRect(85, 96, 5, 8);
     }
 
-    // Bintang Berkedip (Twinkling Stars)
-    ctx.fillStyle = "#ffffff";
-    layerStars.forEach(s => {
-      s.alpha += (Math.random() - 0.5) * 0.05;
-      if (s.alpha < 0.2) s.alpha = 0.2;
-      if (s.alpha > 0.9) s.alpha = 0.9;
-      ctx.globalAlpha = s.alpha;
-      ctx.fillRect(s.x, s.y, 1.5, 1.5);
-    });
-    ctx.globalAlpha = 1.0;
+    // ========================================================
+    // LANSKAP 2: LEMBAH PEGUNUNGAN & BADAI PETIR (TEMA HUJAN)
+    // ========================================================
+    else if (currentTheme === "hujan") {
+      // Langit Kelabu Badai Mendung Pekat
+      let g = ctx.createLinearGradient(0, 0, 0, 125);
+      g.addColorStop(0, "#020617");
+      g.addColorStop(0.6, "#0f172a");
+      g.addColorStop(1, "#1e293b");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 226, 125);
 
-    // ==========================================
-    // LAYER 2: AWAN PARALLAX BELAKANG (Back Clouds)
-    // ==========================================
-    ctx.fillStyle = currentTheme === "hujan" ? "rgba(71, 85, 105, 0.45)" : "rgba(80, 70, 120, 0.35)";
-    layerCloudsBack.forEach(c => {
-      c.x += c.speed;
-      if (c.x > canvas.width) c.x = -c.w;
-      ctx.fillRect(c.x, c.y, c.w, 9);
-      ctx.fillRect(c.x + 4, c.y - 3, c.w - 8, 6);
-    });
+      // Kilatan Petir Nyata Sesekali
+      if (Math.random() < 0.05) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.fillRect(0, 0, 226, 125);
+        // Garis cabang petir
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillRect(130, 0, 3, 25);
+        ctx.fillRect(132, 25, 4, 20);
+        ctx.fillRect(135, 45, 3, 30);
+      }
 
-    // ==========================================
-    // LAYER 3: SILUET KOTA BELAKANG (Far Skyline)
-    // ==========================================
-    ctx.fillStyle = "#0c1220";
-    ctx.fillRect(5, 55, 20, 70);
-    ctx.fillRect(30, 48, 25, 77);
-    ctx.fillRect(60, 60, 22, 65);
-    ctx.fillRect(145, 52, 28, 73);
-    ctx.fillRect(178, 45, 24, 80);
-    ctx.fillRect(205, 58, 20, 67);
+      // Barisan Pegunungan Tropis Berlapis (Latar Belakang)
+      ctx.fillStyle = "#0c1726";
+      ctx.beginPath();
+      ctx.moveTo(0, 85); ctx.lineTo(60, 48); ctx.lineTo(130, 80); ctx.lineTo(190, 42); ctx.lineTo(226, 75); ctx.lineTo(226, 125); ctx.lineTo(0, 125);
+      ctx.fill();
 
-    // ==========================================
-    // LAYER 4: AWAN PARALLAX DEPAN (Front Clouds)
-    // ==========================================
-    ctx.fillStyle = currentTheme === "hujan" ? "rgba(100, 116, 139, 0.6)" : "rgba(148, 163, 184, 0.45)";
-    layerCloudsFront.forEach(c => {
-      c.x += c.speed;
-      if (c.x > canvas.width) c.x = -c.w;
-      ctx.fillRect(c.x, c.y, c.w, 11);
-      ctx.fillRect(c.x + 6, c.y - 4, c.w - 12, 7);
-    });
+      // Pegunungan Latar Depan
+      ctx.fillStyle = "#070e17";
+      ctx.beginPath();
+      ctx.moveTo(0, 95); ctx.lineTo(95, 62); ctx.lineTo(170, 98); ctx.lineTo(226, 82); ctx.lineTo(226, 125); ctx.lineTo(0, 125);
+      ctx.fill();
 
-    // ==========================================
-    // LAYER 5: GEDUNG DEPAN + MONUMEN NASIONAL (Fore Skyline & Monas)
-    // ==========================================
-    ctx.fillStyle = "#050811";
-    ctx.fillRect(15, 68, 24, 57);
-    ctx.fillRect(45, 62, 26, 63);
-    ctx.fillRect(155, 65, 25, 60);
-    ctx.fillRect(185, 60, 26, 65);
+      // Pohon-pohon Kelapa Berayun Tertiup Angin
+      const sway = Math.sin(Date.now() / 180) * 4;
+      ctx.fillStyle = "#052e16";
+      // Batang pohon
+      ctx.fillRect(35, 85, 3, 35);
+      ctx.fillRect(180, 80, 3, 40);
+      // Daun kelapa
+      ctx.fillRect(25 + sway, 80, 24, 6);
+      ctx.fillRect(170 + sway, 75, 24, 6);
 
-    // Jendela Gedung Menyala Pixel
-    ctx.fillStyle = "rgba(251, 191, 36, 0.75)";
-    ctx.fillRect(20, 75, 4, 5);
-    ctx.fillRect(28, 75, 4, 5);
-    ctx.fillRect(20, 86, 4, 5);
-    ctx.fillRect(52, 70, 4, 5);
-    ctx.fillRect(162, 75, 4, 5);
-    ctx.fillRect(192, 72, 4, 5);
-
-    // Tugu Monas di Tengah (X: 105)
-    ctx.fillStyle = "#050811";
-    ctx.fillRect(92, 78, 30, 47);   // Cawan
-    ctx.fillRect(103, 38, 8, 42);   // Tugu
-    // Api Emas Monas
-    ctx.fillStyle = "#f59e0b";
-    ctx.fillRect(104, 28, 6, 10);
-    ctx.fillStyle = "#fef08a";
-    ctx.fillRect(105, 30, 4, 6);
-
-    // ==========================================
-    // LAYER 6: AKSI DINAMIS & EFEK BERITA TERKINI
-    // ==========================================
-    if (currentTheme === "demo") {
-      // Bundaran HI: Aksi Orasi & Kibaran Sang Merah Putih
-      const t = Date.now() / 220;
-      const wave = Math.sin(t) * 3;
-      const flagX = 72;
-
-      // Tiang Bendera
-      ctx.fillStyle = "#94a3b8";
-      ctx.fillRect(flagX, 68, 2, 45);
-
-      // Bendera Merah Putih Berkibar
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(flagX + 2, 68 + wave, 22, 6);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(flagX + 2, 74 + wave, 22, 6);
-
-      // Demonstran Pixel Berdiri & Orasi
-      ctx.fillStyle = "#f1f5f9";
-      ctx.fillRect(66, 96, 5, 8); // Orang 1
-      ctx.fillRect(75, 95, 5, 8); // Orang 2 (Pegang tiang)
-      ctx.fillRect(82, 97, 5, 8); // Orang 3
-      ctx.fillRect(89, 96, 5, 8); // Orang 4
-    } else if (currentTheme === "hujan") {
       // Rintik Hujan Deras
       ctx.fillStyle = "#38bdf8";
-      layerRain.forEach(r => {
-        r.y += r.speed;
+      rainDrops.forEach(r => {
+        r.y += r.s;
         if (r.y > 125) r.y = 0;
         ctx.fillRect(r.x, r.y, 1.5, 6);
       });
-      // Efek Genangan / Percikan di Bawah
-      ctx.fillStyle = "rgba(56, 189, 248, 0.4)";
-      ctx.fillRect(20, 122, 30, 2);
-      ctx.fillRect(120, 122, 40, 2);
-    } else if (currentTheme === "ekonomi") {
-      // Grafik Naik Pixel Hijau (IHSG Green Candle)
-      ctx.fillStyle = "#00d284";
-      ctx.fillRect(68, 100, 4, 15);
-      ctx.fillRect(76, 92, 4, 23);
-      ctx.fillRect(84, 85, 4, 30);
-      ctx.fillRect(92, 78, 4, 37);
-      // Garis trend
-      ctx.fillStyle = "#a7f3d0";
-      ctx.fillRect(68, 100, 28, 2);
+    }
+
+    // ========================================================
+    // LANSKAP 3: CYBERPUNK CANDLESTICK MATRIX (TEMA EKONOMI/IHSG)
+    // ========================================================
+    else if (currentTheme === "ekonomi") {
+      // Langit Hijau Matrix Neon
+      let g = ctx.createLinearGradient(0, 0, 0, 125);
+      g.addColorStop(0, "#022c22");
+      g.addColorStop(0.6, "#064e3b");
+      g.addColorStop(1, "#047857");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 226, 125);
+
+      // Garis Grid Finansial Digital
+      ctx.fillStyle = "rgba(4, 120, 87, 0.35)";
+      for (let y = 15; y < 125; y += 18) {
+        ctx.fillRect(0, y, 226, 1);
+      }
+      for (let x = 15; x < 226; x += 30) {
+        ctx.fillRect(x, 0, 1, 125);
+      }
+
+      // Candlestick Chart Saham IHSG Hijau Menyala Real-Time
+      const bars = [
+        { x: 25, top: 75, h: 22, wickTop: 65, wickH: 40, up: true },
+        { x: 55, top: 68, h: 28, wickTop: 58, wickH: 48, up: true },
+        { x: 85, top: 72, h: 18, wickTop: 65, wickH: 32, up: false },
+        { x: 115, top: 55, h: 32, wickTop: 45, wickH: 52, up: true },
+        { x: 145, top: 48, h: 36, wickTop: 38, wickH: 56, up: true },
+        { x: 175, top: 42, h: 42, wickTop: 30, wickH: 64, up: true },
+        { x: 205, top: 35, h: 48, wickTop: 22, wickH: 70, up: true }
+      ];
+
+      bars.forEach(b => {
+        // Sumbu Candle (Wick)
+        ctx.fillStyle = b.up ? "#6ee7b7" : "#fca5a5";
+        ctx.fillRect(b.x + 4, b.wickTop, 2, b.wickH);
+        // Tubuh Candle
+        ctx.fillStyle = b.up ? "#00d284" : "#f83245";
+        ctx.fillRect(b.x, b.top, 10, b.h);
+      });
+
+      // Garis Indikator Bergerak Naik (Bullish Trendline)
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillRect(15, 88, 30, 2);
+      ctx.fillRect(45, 80, 30, 2);
+      ctx.fillRect(75, 75, 30, 2);
+      ctx.fillRect(105, 62, 30, 2);
+      ctx.fillRect(135, 52, 30, 2);
+      ctx.fillRect(165, 42, 30, 2);
+      ctx.fillRect(195, 32, 25, 2);
+      // Panah Target Hijau
+      ctx.fillStyle = "#6ee7b7";
+      ctx.fillRect(215, 28, 6, 6);
+    }
+
+    // ========================================================
+    // LANSKAP 4: TERASERING SAWAH & MATAHARI PAGI (TEMA NASIONAL/AGRO)
+    // ========================================================
+    else {
+      // Langit Pagi Biru Tropis Indonesia
+      let g = ctx.createLinearGradient(0, 0, 0, 125);
+      g.addColorStop(0, "#0284c7");
+      g.addColorStop(0.6, "#38bdf8");
+      g.addColorStop(1, "#bae6fd");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 226, 125);
+
+      // Matahari Terbit Kuning Cerah
+      ctx.fillStyle = "#fef08a";
+      ctx.fillRect(175, 18, 22, 22);
+      ctx.fillStyle = "#fde047";
+      ctx.fillRect(178, 21, 16, 16);
+
+      // Awan Pagi Melayang
+      ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
+      cloudPuffs.forEach(c => {
+        c.x += c.s;
+        if (c.x > 226) c.x = -c.w;
+        ctx.fillRect(c.x, c.y, c.w, 9);
+        ctx.fillRect(c.x + 6, c.y - 4, c.w - 12, 7);
+      });
+
+      // Terasering Sawah Hijau Bertingkat
+      ctx.fillStyle = "#15803d";
+      ctx.fillRect(0, 68, 226, 14);
+      ctx.fillStyle = "#16a34a";
+      ctx.fillRect(0, 80, 226, 15);
+      ctx.fillStyle = "#22c55e";
+      ctx.fillRect(0, 93, 226, 16);
+      ctx.fillStyle = "#4ade80";
+      ctx.fillRect(0, 107, 226, 18);
+
+      // Pematang Sawah Cokelat Pixel
+      ctx.fillStyle = "#78350f";
+      ctx.fillRect(0, 79, 226, 2);
+      ctx.fillRect(0, 92, 226, 2);
+      ctx.fillRect(0, 106, 226, 2);
+
+      // Gubuk Sawah Petani Tradisional
+      ctx.fillStyle = "#92400e";
+      ctx.fillRect(45, 75, 14, 10); // Dinding
+      ctx.fillStyle = "#b45309";
+      ctx.fillRect(42, 71, 20, 5);  // Atap rumbia
     }
 
     requestAnimationFrame(render);
@@ -1370,8 +1456,7 @@ function fetchAntaraLiveNews() {
     .then(r => r.json())
     .then(res => {
       if (res && res.data && res.data.posts && res.data.posts.length > 0) {
-        // Simpan 5 berita terkini ke daftar
-        const posts = res.data.posts.slice(0, 5);
+        const posts = res.data.posts.slice(0, 6);
         posts.forEach(p => {
           let theme = "nasional";
           let tag = "BERITA NASIONAL";
@@ -1391,12 +1476,11 @@ function fetchAntaraLiveNews() {
             title: p.title,
             theme: theme,
             tag: tag,
-            date: "1 Minggu Terakhir"
+            date: "Relevan 1 Minggu"
           });
         });
 
-        // Hapus duplikat dan rapikan
-        newsItems = newsItems.slice(0, 8);
+        newsItems = newsItems.slice(0, 10);
         updateNewsDisplay();
       }
     })

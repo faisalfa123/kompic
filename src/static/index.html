@@ -1215,6 +1215,31 @@
          TAB 7: PANDUAN & HELP
          ========================================================================= -->
     <div id="pane-help" class="tab-pane">
+        <!-- Specs & CPU Info Card -->
+        <div class="panel border-accent-blue" style="margin-bottom:1.5rem;">
+          <h3 class="h-blue">⚙️ Informasi Arsitektur Perangkat &amp; Proses Mesin</h3>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:12px;">
+            <div style="background:#0f172a; padding:10px 14px; border-radius:6px; border:1px solid #334155;">
+              <span style="color:#94a3b8; font-size:0.8rem; display:block;">Arsitektur Perangkat:</span>
+              <b id="help-dev-arch" style="color:#fff; font-size:0.9rem;">ODROID-C2 (ARM Cortex-A53 64-bit)</b>
+            </div>
+            <div style="background:#0f172a; padding:10px 14px; border-radius:6px; border:1px solid #334155;">
+              <span style="color:#94a3b8; font-size:0.8rem; display:block;">Hostname Sistem:</span>
+              <b id="help-dev-hostname" style="color:#38bdf8; font-size:0.9rem;">DietPi</b>
+            </div>
+            <div style="background:#0f172a; padding:10px 14px; border-radius:6px; border:1px solid #334155;">
+              <span style="color:#94a3b8; font-size:0.8rem; display:block;">Process PID Optimizer:</span>
+              <b id="help-dev-pid" style="color:#20c997; font-size:0.9rem;">PID Aktif</b>
+            </div>
+            <div style="background:#0f172a; padding:10px 14px; border-radius:6px; border:1px solid #334155;">
+              <span style="color:#94a3b8; font-size:0.8rem; display:block;">Batas Suhu Maksimal:</span>
+              <b id="help-dev-max-temp" style="color:#f83245; font-size:0.9rem;">69.0°C (Auto-Cooldown @ 60°C)</b>
+            </div>
+          </div>
+          <div style="margin-top:10px; font-size:0.8rem; color:#00d284;">
+            🛡️ <b>Status Keamanan:</b> Read-Only Telemetry (Zero Remote Exec - Tanpa Akses Terminal Berbahaya)
+          </div>
+        </div>
       <div class="panel border-accent-blue">
         <h3 class="h-blue">🛠️ Arsitektur Mandiri ODROID-C2 (Golang Native)</h3>
         <ul>
