@@ -1523,3 +1523,111 @@ tr:hover {
   position: relative !important;
   z-index: 1 !important;
 }
+
+
+
+/* Flowchart Monitor Switcher & Views */
+.flow-switcher {
+  display: flex !important;
+  gap: 8px !important;
+  margin-bottom: 1.25rem !important;
+  background: #0f172a !important;
+  padding: 6px !important;
+  border-radius: 8px !important;
+  border: 1px solid #1e293b !important;
+  width: fit-content !important;
+}
+
+.flow-tab-btn {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  border: none !important;
+  padding: 8px 18px !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+
+.flow-tab-btn.active {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.45) !important;
+}
+
+.flow-view {
+  display: none !important;
+}
+
+.flow-view.active {
+  display: block !important;
+}
+
+/* Floating Mini-Screen Pixel Art Widget */
+.floating-pixel-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 220px;
+  height: 180px;
+  background: #0f172a;
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(59, 130, 246, 0.4);
+  z-index: 9999;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.floating-pixel-widget:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.8), 0 0 25px rgba(59, 130, 246, 0.6);
+}
+
+.pixel-widget-header {
+  background: #1e293b;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #334155;
+}
+
+.pixel-widget-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fbbf24;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pixel-widget-badge {
+  font-size: 0.65rem;
+  background: #ef4444;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 800;
+}
+
+#pixelScreenCanvas {
+  width: 100%;
+  height: 110px;
+  display: block;
+  image-rendering: pixelated;
+  background: #090d16;
+}
+
+.pixel-widget-ticker {
+  background: #0b0f19;
+  padding: 5px 8px;
+  font-size: 0.72rem;
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-top: 1px solid #1e293b;
+}
