@@ -1091,149 +1091,294 @@ function fetchNewsTopic() {
 
 
 
-// --- Floating Mini-Screen Pixel Art Engine ---
-let pTheme = "demo"; // "demo", "hujan", "cerah"
-let pClouds = [
-  { x: 10, y: 15, w: 40, speed: 0.35 },
-  { x: 90, y: 25, w: 55, speed: 0.2 },
-  { x: 170, y: 12, w: 45, speed: 0.3 }
+
+// --- Sidebar Multi-Layer Pixel Art Engine & News Topic Carousel ---
+let newsItems = [
+  {
+    title: "Massa mengawal aspirasi & situasi politik di kawasan Bundaran HI Jakarta",
+    theme: "demo",
+    tag: "AKSI BUNDARAN HI",
+    date: "Isu Terkini"
+  },
+  {
+    title: "BMKG: Peringatan dini potensi hujan lebat & genangan di Jabodetabek",
+    theme: "hujan",
+    tag: "CUACA & BANJIR",
+    date: "Prakiraan 1 Minggu"
+  },
+  {
+    title: "Presiden pantau stabilitas pangan dan percepatan pembangunan nasional",
+    theme: "nasional",
+    tag: "AGRO & NASIONAL",
+    date: "Berita Nasional"
+  },
+  {
+    title: "IHSG bergerak dinamis, pergerakan investasi dan ekonomi digital menguat",
+    theme: "ekonomi",
+    tag: "FINANSIAL & BISNIS",
+    date: "Pasar Keuangan"
+  }
 ];
-let pRaindrops = [];
-for (let i = 0; i < 35; i++) {
-  pRaindrops.push({ x: Math.random() * 220, y: Math.random() * 110, speed: 3 + Math.random() * 3 });
+let currentNewsIdx = 0;
+let currentTheme = "demo";
+
+let layerStars = [];
+for (let i = 0; i < 25; i++) {
+  layerStars.push({ x: Math.random() * 226, y: Math.random() * 50, alpha: Math.random() });
 }
 
-function initFloatingPixelWidget() {
-  const canvas = document.getElementById("pixelScreenCanvas");
+let layerCloudsBack = [
+  { x: 15, y: 18, w: 35, speed: 0.15 },
+  { x: 120, y: 10, w: 45, speed: 0.12 }
+];
+
+let layerCloudsFront = [
+  { x: 40, y: 28, w: 55, speed: 0.35 },
+  { x: 160, y: 22, w: 60, speed: 0.28 }
+];
+
+let layerRain = [];
+for (let i = 0; i < 40; i++) {
+  layerRain.push({ x: Math.random() * 226, y: Math.random() * 125, speed: 4 + Math.random() * 3 });
+}
+
+function initSidebarPixelDiorama() {
+  const canvas = document.getElementById("sidebarPixelCanvas");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
-  fetchFloatingNews();
-  setInterval(fetchFloatingNews, 60000); // Polling tiap 1 menit
+  fetchAntaraLiveNews();
 
-  function renderPixel() {
+  function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Langit Mini Screen
-    let skyGradient = ctx.createLinearGradient(0, 0, 0, 110);
-    if (pTheme === "hujan") {
-      skyGradient.addColorStop(0, "#0b101b");
-      skyGradient.addColorStop(1, "#1e293b");
-    } else if (pTheme === "demo") {
-      skyGradient.addColorStop(0, "#1e1b4b");
-      skyGradient.addColorStop(1, "#312e81");
+    // ==========================================
+    // LAYER 1: LANGIT / ATMOSFER (Deep Sky Gradient)
+    // ==========================================
+    let sky = ctx.createLinearGradient(0, 0, 0, 125);
+    if (currentTheme === "hujan") {
+      sky.addColorStop(0, "#090d16");
+      sky.addColorStop(1, "#182338");
+    } else if (currentTheme === "demo") {
+      sky.addColorStop(0, "#140e2b");
+      sky.addColorStop(0.6, "#24184c");
+      sky.addColorStop(1, "#3b226e");
+    } else if (currentTheme === "ekonomi") {
+      sky.addColorStop(0, "#06221f");
+      sky.addColorStop(1, "#0f4239");
     } else {
-      skyGradient.addColorStop(0, "#0f172a");
-      skyGradient.addColorStop(1, "#1e293b");
+      sky.addColorStop(0, "#080e1c");
+      sky.addColorStop(1, "#152445");
     }
-    ctx.fillStyle = skyGradient;
+    ctx.fillStyle = sky;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 2. Siluet Gedung Jakarta & Tugu Monas
-    ctx.fillStyle = "#090d16";
-    ctx.fillRect(10, 45, 25, 65);
-    ctx.fillRect(40, 35, 30, 75);
-    ctx.fillRect(75, 50, 25, 60);
+    // Bintang Berkedip (Twinkling Stars)
+    ctx.fillStyle = "#ffffff";
+    layerStars.forEach(s => {
+      s.alpha += (Math.random() - 0.5) * 0.05;
+      if (s.alpha < 0.2) s.alpha = 0.2;
+      if (s.alpha > 0.9) s.alpha = 0.9;
+      ctx.globalAlpha = s.alpha;
+      ctx.fillRect(s.x, s.y, 1.5, 1.5);
+    });
+    ctx.globalAlpha = 1.0;
 
-    // Monas di posisi X: 110
-    ctx.fillRect(100, 65, 30, 45); // Dasar cawan
-    ctx.fillRect(111, 30, 8, 40);  // Tugu Monas
-    ctx.fillStyle = "#fbbf24";     // Lidah api emas Monas
-    ctx.fillRect(112, 22, 6, 8);
-
-    ctx.fillStyle = "#090d16";
-    ctx.fillRect(135, 40, 30, 70);
-    ctx.fillRect(170, 50, 25, 60);
-    ctx.fillRect(200, 35, 20, 75);
-
-    // Jendela pixel menyala
-    ctx.fillStyle = "rgba(251, 191, 36, 0.6)";
-    ctx.fillRect(48, 45, 4, 6);
-    ctx.fillRect(48, 60, 4, 6);
-    ctx.fillRect(145, 50, 4, 6);
-
-    // 3. Awan Pixel Melayang
-    ctx.fillStyle = pTheme === "hujan" ? "rgba(100, 116, 139, 0.7)" : "rgba(71, 85, 105, 0.6)";
-    pClouds.forEach(c => {
+    // ==========================================
+    // LAYER 2: AWAN PARALLAX BELAKANG (Back Clouds)
+    // ==========================================
+    ctx.fillStyle = currentTheme === "hujan" ? "rgba(71, 85, 105, 0.45)" : "rgba(80, 70, 120, 0.35)";
+    layerCloudsBack.forEach(c => {
       c.x += c.speed;
       if (c.x > canvas.width) c.x = -c.w;
-      ctx.fillRect(c.x, c.y, c.w, 10);
-      ctx.fillRect(c.x + 6, c.y - 4, c.w - 12, 6);
+      ctx.fillRect(c.x, c.y, c.w, 9);
+      ctx.fillRect(c.x + 4, c.y - 3, c.w - 8, 6);
     });
 
-    // 4. Animasi Dinamis Sesuai Isu Berita Indonesia
-    if (pTheme === "hujan") {
-      ctx.fillStyle = "#38bdf8";
-      pRaindrops.forEach(r => {
-        r.y += r.speed;
-        if (r.y > 110) r.y = 0;
-        ctx.fillRect(r.x, r.y, 2, 5);
-      });
-    } else if (pTheme === "demo") {
-      // Bundaran HI: Aksi demonstran dan kibaran bendera Merah Putih
-      const t = Date.now() / 250;
+    // ==========================================
+    // LAYER 3: SILUET KOTA BELAKANG (Far Skyline)
+    // ==========================================
+    ctx.fillStyle = "#0c1220";
+    ctx.fillRect(5, 55, 20, 70);
+    ctx.fillRect(30, 48, 25, 77);
+    ctx.fillRect(60, 60, 22, 65);
+    ctx.fillRect(145, 52, 28, 73);
+    ctx.fillRect(178, 45, 24, 80);
+    ctx.fillRect(205, 58, 20, 67);
+
+    // ==========================================
+    // LAYER 4: AWAN PARALLAX DEPAN (Front Clouds)
+    // ==========================================
+    ctx.fillStyle = currentTheme === "hujan" ? "rgba(100, 116, 139, 0.6)" : "rgba(148, 163, 184, 0.45)";
+    layerCloudsFront.forEach(c => {
+      c.x += c.speed;
+      if (c.x > canvas.width) c.x = -c.w;
+      ctx.fillRect(c.x, c.y, c.w, 11);
+      ctx.fillRect(c.x + 6, c.y - 4, c.w - 12, 7);
+    });
+
+    // ==========================================
+    // LAYER 5: GEDUNG DEPAN + MONUMEN NASIONAL (Fore Skyline & Monas)
+    // ==========================================
+    ctx.fillStyle = "#050811";
+    ctx.fillRect(15, 68, 24, 57);
+    ctx.fillRect(45, 62, 26, 63);
+    ctx.fillRect(155, 65, 25, 60);
+    ctx.fillRect(185, 60, 26, 65);
+
+    // Jendela Gedung Menyala Pixel
+    ctx.fillStyle = "rgba(251, 191, 36, 0.75)";
+    ctx.fillRect(20, 75, 4, 5);
+    ctx.fillRect(28, 75, 4, 5);
+    ctx.fillRect(20, 86, 4, 5);
+    ctx.fillRect(52, 70, 4, 5);
+    ctx.fillRect(162, 75, 4, 5);
+    ctx.fillRect(192, 72, 4, 5);
+
+    // Tugu Monas di Tengah (X: 105)
+    ctx.fillStyle = "#050811";
+    ctx.fillRect(92, 78, 30, 47);   // Cawan
+    ctx.fillRect(103, 38, 8, 42);   // Tugu
+    // Api Emas Monas
+    ctx.fillStyle = "#f59e0b";
+    ctx.fillRect(104, 28, 6, 10);
+    ctx.fillStyle = "#fef08a";
+    ctx.fillRect(105, 30, 4, 6);
+
+    // ==========================================
+    // LAYER 6: AKSI DINAMIS & EFEK BERITA TERKINI
+    // ==========================================
+    if (currentTheme === "demo") {
+      // Bundaran HI: Aksi Orasi & Kibaran Sang Merah Putih
+      const t = Date.now() / 220;
       const wave = Math.sin(t) * 3;
-      const flagX = 75;
+      const flagX = 72;
 
-      // Tiang bendera
+      // Tiang Bendera
       ctx.fillStyle = "#94a3b8";
-      ctx.fillRect(flagX, 60, 2, 45);
+      ctx.fillRect(flagX, 68, 2, 45);
 
-      // Bendera Merah Putih berkibar
+      // Bendera Merah Putih Berkibar
       ctx.fillStyle = "#ef4444";
-      ctx.fillRect(flagX + 2, 60 + wave, 20, 6);
+      ctx.fillRect(flagX + 2, 68 + wave, 22, 6);
       ctx.fillStyle = "#ffffff";
-      ctx.fillRect(flagX + 2, 66 + wave, 20, 6);
+      ctx.fillRect(flagX + 2, 74 + wave, 22, 6);
 
-      // Karakter demonstran berorasi
-      ctx.fillStyle = "#cbd5e1";
-      ctx.fillRect(68, 88, 5, 8);
-      ctx.fillRect(78, 86, 5, 8);
-      ctx.fillRect(86, 87, 5, 8);
+      // Demonstran Pixel Berdiri & Orasi
+      ctx.fillStyle = "#f1f5f9";
+      ctx.fillRect(66, 96, 5, 8); // Orang 1
+      ctx.fillRect(75, 95, 5, 8); // Orang 2 (Pegang tiang)
+      ctx.fillRect(82, 97, 5, 8); // Orang 3
+      ctx.fillRect(89, 96, 5, 8); // Orang 4
+    } else if (currentTheme === "hujan") {
+      // Rintik Hujan Deras
+      ctx.fillStyle = "#38bdf8";
+      layerRain.forEach(r => {
+        r.y += r.speed;
+        if (r.y > 125) r.y = 0;
+        ctx.fillRect(r.x, r.y, 1.5, 6);
+      });
+      // Efek Genangan / Percikan di Bawah
+      ctx.fillStyle = "rgba(56, 189, 248, 0.4)";
+      ctx.fillRect(20, 122, 30, 2);
+      ctx.fillRect(120, 122, 40, 2);
+    } else if (currentTheme === "ekonomi") {
+      // Grafik Naik Pixel Hijau (IHSG Green Candle)
+      ctx.fillStyle = "#00d284";
+      ctx.fillRect(68, 100, 4, 15);
+      ctx.fillRect(76, 92, 4, 23);
+      ctx.fillRect(84, 85, 4, 30);
+      ctx.fillRect(92, 78, 4, 37);
+      // Garis trend
+      ctx.fillStyle = "#a7f3d0";
+      ctx.fillRect(68, 100, 28, 2);
     }
 
-    requestAnimationFrame(renderPixel);
+    requestAnimationFrame(render);
   }
 
-  renderPixel();
+  render();
 }
 
-function fetchFloatingNews() {
+function nextNewsTopic() {
+  currentNewsIdx = (currentNewsIdx + 1) % newsItems.length;
+  updateNewsDisplay();
+}
+
+function updateNewsDisplay() {
+  const item = newsItems[currentNewsIdx];
+  if (!item) return;
+
+  currentTheme = item.theme;
+
+  const headlineEl = document.getElementById("sidePixelHeadline");
+  const badgeEl = document.getElementById("sidePixelBadge");
+  const tagEl = document.getElementById("sidePixelTag");
+  const dateEl = document.getElementById("sidePixelDate");
+  const topH = document.getElementById("tickerHeadline");
+
+  if (headlineEl) headlineEl.innerText = item.title;
+  if (topH) topH.innerText = item.title;
+  if (tagEl) tagEl.innerText = "🇮🇩 " + item.tag;
+  if (dateEl) dateEl.innerText = item.date;
+
+  if (badgeEl) {
+    if (item.theme === "demo") {
+      badgeEl.innerText = "AKSI HI";
+      badgeEl.style.background = "#ef4444";
+    } else if (item.theme === "hujan") {
+      badgeEl.innerText = "CUACA";
+      badgeEl.style.background = "#0284c7";
+    } else if (item.theme === "ekonomi") {
+      badgeEl.innerText = "IHSG";
+      badgeEl.style.background = "#00d284";
+    } else {
+      badgeEl.innerText = "NASIONAL";
+      badgeEl.style.background = "#8b5cf6";
+    }
+  }
+}
+
+function fetchAntaraLiveNews() {
   fetch("https://api-berita-indonesia.vercel.app/antara/terbaru")
     .then(r => r.json())
     .then(res => {
       if (res && res.data && res.data.posts && res.data.posts.length > 0) {
-        const item = res.data.posts[0];
-        const title = item.title;
-        const textEl = document.getElementById("widgetTickerText");
-        const badgeEl = document.getElementById("widgetThemeBadge");
-        const topH = document.getElementById("tickerHeadline");
+        // Simpan 5 berita terkini ke daftar
+        const posts = res.data.posts.slice(0, 5);
+        posts.forEach(p => {
+          let theme = "nasional";
+          let tag = "BERITA NASIONAL";
+          const lower = p.title.toLowerCase();
+          if (lower.includes("demo") || lower.includes("aksi") || lower.includes("politik") || lower.includes("aspirasi") || lower.includes("dpr")) {
+            theme = "demo";
+            tag = "AKSI BUNDARAN HI";
+          } else if (lower.includes("hujan") || lower.includes("cuaca") || lower.includes("bmkg") || lower.includes("banjir")) {
+            theme = "hujan";
+            tag = "BMKG & CUACA";
+          } else if (lower.includes("ihsg") || lower.includes("ekonomi") || lower.includes("rupiah") || lower.includes("saham")) {
+            theme = "ekonomi";
+            tag = "PASAR & BISNIS";
+          }
 
-        if (textEl) textEl.innerText = title;
-        if (topH) topH.innerText = title;
+          newsItems.unshift({
+            title: p.title,
+            theme: theme,
+            tag: tag,
+            date: "1 Minggu Terakhir"
+          });
+        });
 
-        const lower = title.toLowerCase();
-        if (lower.includes("demo") || lower.includes("aksi") || lower.includes("politik") || lower.includes("dpr") || lower.includes("aspirasi")) {
-          pTheme = "demo";
-          if (badgeEl) { badgeEl.innerText = "AKSI HI"; badgeEl.style.background = "#ef4444"; }
-        } else if (lower.includes("hujan") || lower.includes("banjir") || lower.includes("cuaca") || lower.includes("bmkg")) {
-          pTheme = "hujan";
-          if (badgeEl) { badgeEl.innerText = "HUJAN"; badgeEl.style.background = "#0284c7"; }
-        } else {
-          pTheme = "cerah";
-          if (badgeEl) { badgeEl.innerText = "BERITA"; badgeEl.style.background = "#10b981"; }
-        }
+        // Hapus duplikat dan rapikan
+        newsItems = newsItems.slice(0, 8);
+        updateNewsDisplay();
       }
     })
     .catch(() => {
-      const textEl = document.getElementById("widgetTickerText");
-      const badgeEl = document.getElementById("widgetThemeBadge");
-      if (textEl) textEl.innerText = "Aspirasi massa mengawal situasi di kawasan Bundaran HI Jakarta";
-      if (badgeEl) { badgeEl.innerText = "AKSI HI"; badgeEl.style.background = "#ef4444"; }
-      pTheme = "demo";
+      updateNewsDisplay();
     });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  initFloatingPixelWidget();
+  initSidebarPixelDiorama();
 });
