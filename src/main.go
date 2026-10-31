@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"crypto/sha256"
@@ -2217,3 +2217,4 @@ func main() {
 		log.Fatalf("Server berhenti: %v", err)
 	}
 }
+
