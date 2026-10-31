@@ -117,6 +117,15 @@
       </div>
 
       <!-- Hardware Telemetry: CPU Temp & RAM Gauge -->
+      <!-- Dynamic Pixel Art News Banner (Indonesia Live) -->
+      <div class="pixel-banner-header" id="pixelBannerWidget">
+        <div class="pixel-flag-icon" id="pixelBannerIcon">🚩</div>
+        <div class="pixel-news-info">
+          <span class="pixel-news-tag" id="tickerTag">BERITA INDONESIA TERKINI</span>
+          <span class="pixel-news-title" id="tickerHeadline">Memuat siaran langsung aspirasi &amp; situasi nasional...</span>
+        </div>
+      </div>
+
       <div class="sys-metrics-top">
         <div class="metric-pill">
           <span class="dot-indicator dot-normal" id="top-temp-dot"></span>
@@ -1013,16 +1022,60 @@
          ========================================================================= -->
     <div id="pane-sync" class="tab-pane">
       <div class="fc-wrap">
-        <div class="fc-title">☁️ Alur Kerja Sinkronisasi Cloud (Rclone MEGA)</div>
-        <svg class="fc-svg" id="sync-svg" viewBox="0 0 560 120" preserveAspectRatio="xMidYMid meet" style="min-width:480px">
+        <div class="fc-title">☁️ Alur Kerja Sinkronisasi Cloud (Rclone MEGA Vault)</div>
+        <p class="fc-desc">5 Tahapan Teknis: Antrean Berkas Teringan ➔ Throttle CPU &amp; Bandwidth ➔ Rclone Engine ➔ Partisi Tanggal /YYYY/MM/DD/ ➔ Verifikasi SHA-1.</p>
+        
+        <svg class="fc-svg" id="sync-svg-detailed" viewBox="0 0 1180 200" preserveAspectRatio="xMidYMid meet">
           <defs>
             <marker id="sah" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#94a3b8"></path></marker>
+            <marker id="sahg" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#00d284"></path></marker>
           </defs>
-          <g class="ed"><path d="M135,60 L225,60" stroke="#94a3b8" marker-end="url(#sah)"></path></g>
-          <g class="ed"><path d="M335,60 L425,60" stroke="#94a3b8" marker-end="url(#sah)"></path></g>
-          <g class="nd"><rect x="25" y="38" width="110" height="44" rx="6" fill="#182234" stroke="#334155"></rect><text x="80" y="55" fill="#fff" text-anchor="middle" font-size="12">File Lokal</text><text x="80" y="70" fill="#94a3b8" text-anchor="middle" font-size="10">/mnt/hdd1/...</text></g>
-          <g class="nd"><rect x="225" y="38" width="110" height="44" rx="6" fill="#182234" stroke="#334155"></rect><text x="280" y="55" fill="#fff" text-anchor="middle" font-size="12">Rclone</text><text x="280" y="70" fill="#94a3b8" text-anchor="middle" font-size="10">Sync Engine</text></g>
-          <g class="nd rep"><rect x="420" y="38" width="120" height="44" rx="6" fill="#064e3b" stroke="#00d284"></rect><text x="480" y="55" fill="#fff" text-anchor="middle" font-size="12">MEGA Cloud</text><text x="480" y="70" fill="#94a3b8" text-anchor="middle" font-size="10">mega:Immich</text></g>
+
+          <!-- Smooth n8n-style Curved Paths -->
+          <g class="ed"><path d="M190,100 C215,100 215,100 240,100" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#sah)"></path></g>
+          <g class="ed"><path d="M430,100 C455,100 455,100 480,100" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#sah)"></path></g>
+          <g class="ed"><path d="M680,100 C705,100 705,100 730,100" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#sah)"></path></g>
+          <g class="ed"><path d="M920,100 C945,100 945,100 970,100" stroke="#00d284" stroke-width="2.5" fill="none" marker-end="url(#sahg)"></path></g>
+
+          <!-- Node 1: Antrean Berkas Teringan -->
+          <g class="flow-node" style="cursor:pointer;" onclick="showNodeInspect('1. Antrean Berkas Teringan', 'Mengambil berkas teringan dari hasil evaluasi: hasil kompres jika hemat, atau berkas asli jika di-skip. Status antrean tersimpan di optimizer_state.json.')">
+            <rect x="20" y="70" width="170" height="60" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
+            <circle cx="20" cy="100" r="4" fill="#64748b"></circle><circle cx="190" cy="100" r="4" fill="#64748b"></circle>
+            <text x="105" y="95" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">📥 Antrean Teringan</text>
+            <text x="105" y="112" fill="#94a3b8" text-anchor="middle" font-size="9">Hemat atau Asli Skip</text>
+          </g>
+
+          <!-- Node 2: Cek Idle CPU & Bandwidth -->
+          <g class="flow-node" style="cursor:pointer;" onclick="showNodeInspect('2. Throttle CPU & Jaringan', 'Hanya memulai proses upload jika CPU idle (<40%) agar streaming & upload di Immich tetap lancar. Bandwidth dibatasi maksimum 3 MB/s.')">
+            <rect x="240" y="70" width="190" height="60" rx="10" fill="#182234" stroke="#f59e0b" stroke-width="2"></rect>
+            <circle cx="240" cy="100" r="4" fill="#f59e0b"></circle><circle cx="430" cy="100" r="4" fill="#f59e0b"></circle>
+            <text x="335" y="95" fill="#fbbf24" text-anchor="middle" font-size="12" font-weight="bold">⚖️ Throttle CPU &amp; Jaringan</text>
+            <text x="335" y="112" fill="#fde68a" text-anchor="middle" font-size="9">CPU &lt; 40% &amp; BW Limit 3M</text>
+          </g>
+
+          <!-- Node 3: Rclone Engine Execution -->
+          <g class="flow-node" style="cursor:pointer;" onclick="showNodeInspect('3. Rclone Engine Execution', 'Eksekusi: rclone copyto --transfers=1 --checkers=2 --fast-list --bwlimit=3M. Dijalankan dengan nice 15 pada latar belakang.')">
+            <rect x="480" y="70" width="200" height="60" rx="10" fill="#0c4a6e" stroke="#0284c7" stroke-width="2"></rect>
+            <circle cx="480" cy="100" r="4" fill="#0284c7"></circle><circle cx="680" cy="100" r="4" fill="#0284c7"></circle>
+            <text x="580" y="95" fill="#7dd3fc" text-anchor="middle" font-size="12" font-weight="bold">⚡ Rclone Sync Engine</text>
+            <text x="580" y="112" fill="#bae6fd" text-anchor="middle" font-size="9">--transfers=1 --bwlimit=3M</text>
+          </g>
+
+          <!-- Node 4: Partisi Folder Tanggal -->
+          <g class="flow-node" style="cursor:pointer;" onclick="showNodeInspect('4. Struktur Partisi Tanggal', 'Remote MEGA Target: mega:ImmichBackup/YYYY/MM/DD/filename.ext. Folder dibangun otomatis sesuai metadata EXIF tanggal pengambilan foto/video.')">
+            <rect x="730" y="70" width="190" height="60" rx="10" fill="#182234" stroke="#a855f7" stroke-width="2"></rect>
+            <circle cx="730" cy="100" r="4" fill="#a855f7"></circle><circle cx="920" cy="100" r="4" fill="#a855f7"></circle>
+            <text x="825" y="95" fill="#d8b4fe" text-anchor="middle" font-size="12" font-weight="bold">📁 Partisi Tanggal</text>
+            <text x="825" y="112" fill="#c084fc" text-anchor="middle" font-size="9">mega:Immich/YYYY/MM/DD/</text>
+          </g>
+
+          <!-- Node 5: Verifikasi Checksum & Status -->
+          <g class="flow-node" style="cursor:pointer;" onclick="showNodeInspect('5. Verifikasi Checksum & Status', 'Mencocokkan ukuran byte & hash SHA-1 file di cloud vs lokal. Jika valid -> status COMPLETED dan tandai state. Jika gagal -> antrean retry otomatis.')">
+            <rect x="970" y="70" width="190" height="60" rx="10" fill="#064e3b" stroke="#00d284" stroke-width="2"></rect>
+            <circle cx="970" cy="100" r="4" fill="#00d284"></circle>
+            <text x="1065" y="95" fill="#6ee7b7" text-anchor="middle" font-size="12" font-weight="bold">✅ Verifikasi Checksum</text>
+            <text x="1065" y="112" fill="#a7f3d0" text-anchor="middle" font-size="9">SHA-1 Valid &amp; State Recorded</text>
+          </g>
         </svg>
       </div>
 

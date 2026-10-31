@@ -929,96 +929,120 @@ document.addEventListener("DOMContentLoaded", () => {
   checkAuth();
 });
 
-// --- Dynamic Pixel Art Sky & Horizon Animation ---
+// --- Dynamic Pixel Art Sky & Horizon Full-Screen Animation ---
 let pixelTheme = "demo"; // "demo", "hujan", "cerah", "nasional"
 let pixelClouds = [
-  { x: 50, y: 20, w: 60, speed: 0.3 },
-  { x: 350, y: 40, w: 90, speed: 0.2 },
-  { x: 750, y: 15, w: 70, speed: 0.25 }
+  { x: 50, y: 30, w: 90, speed: 0.4 },
+  { x: 380, y: 60, w: 120, speed: 0.25 },
+  { x: 780, y: 25, w: 100, speed: 0.35 },
+  { x: 1150, y: 70, w: 110, speed: 0.3 }
 ];
 let raindrops = [];
-for (let i = 0; i < 40; i++) {
-  raindrops.push({ x: Math.random() * 1200, y: Math.random() * 120, speed: 4 + Math.random() * 3 });
+for (let i = 0; i < 70; i++) {
+  raindrops.push({ x: Math.random() * 2000, y: Math.random() * 800, speed: 5 + Math.random() * 4 });
 }
 
 function initPixelCanvas() {
-  const canvas = document.getElementById("pixelCanvas");
+  const canvas = document.getElementById("pixelBackgroundCanvas") || document.getElementById("pixelCanvas");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
   fetchNewsTopic();
+  setInterval(fetchNewsTopic, 60000); // Perbarui berita tiap 1 menit
 
   function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Sky Gradient
-    let skyGradient = ctx.createLinearGradient(0, 0, 0, 120);
+    // 1. Sky Gradient Atmosfer Malam
+    let skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
     if (pixelTheme === "hujan") {
-      skyGradient.addColorStop(0, "#111827");
+      skyGradient.addColorStop(0, "#090d16");
+      skyGradient.addColorStop(0.5, "#111827");
       skyGradient.addColorStop(1, "#1f2937");
     } else if (pixelTheme === "demo") {
-      skyGradient.addColorStop(0, "#1e1b4b");
+      skyGradient.addColorStop(0, "#0b0c1b");
+      skyGradient.addColorStop(0.4, "#1e1b4b");
       skyGradient.addColorStop(1, "#312e81");
     } else {
-      skyGradient.addColorStop(0, "#0f172a");
+      skyGradient.addColorStop(0, "#080b14");
+      skyGradient.addColorStop(0.5, "#0f172a");
       skyGradient.addColorStop(1, "#1e293b");
     }
     ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 2. Pixel City Skyline / Monas Silhouette
-    ctx.fillStyle = "#090d16";
-    // Gedung-gedung pixel
-    ctx.fillRect(40, 50, 45, 70);
-    ctx.fillRect(90, 35, 55, 85);
-    ctx.fillRect(150, 60, 40, 60);
-    ctx.fillRect(200, 40, 60, 80);
-    // Monas silhouette di tengah
-    ctx.fillRect(580, 75, 40, 45); // Dasar cawan
-    ctx.fillRect(595, 30, 10, 50); // Tugu
-    ctx.fillStyle = "#fbbf24";     // Lidah api emas Monas
-    ctx.fillRect(596, 20, 8, 10);
-    ctx.fillStyle = "#090d16";
-    // Gedung kanan
-    ctx.fillRect(800, 45, 50, 75);
-    ctx.fillRect(860, 30, 65, 90);
-    ctx.fillRect(940, 55, 45, 65);
-    ctx.fillRect(1000, 40, 50, 80);
+    // 2. Pixel Skyline Gedung Kota & Monas
+    const groundY = canvas.height - 40;
+    ctx.fillStyle = "#050811";
+    // Siluet deretan gedung pencakar langit Jakarta
+    for (let x = 0; x < canvas.width; x += 110) {
+      const h = 80 + ((x * 13) % 140);
+      ctx.fillRect(x, groundY - h, 75, h);
+      // Jendela-jendela pixel gedung menyala kuning
+      ctx.fillStyle = "rgba(251, 191, 36, 0.4)";
+      ctx.fillRect(x + 12, groundY - h + 15, 6, 8);
+      ctx.fillRect(x + 28, groundY - h + 15, 6, 8);
+      ctx.fillRect(x + 12, groundY - h + 35, 6, 8);
+      ctx.fillRect(x + 28, groundY - h + 35, 6, 8);
+      ctx.fillStyle = "#050811";
+    }
 
-    // 3. Pixel Clouds
-    ctx.fillStyle = pixelTheme === "hujan" ? "#475569" : "#334155";
+    // Tugu Monas di tengah layar
+    const monasX = Math.floor(canvas.width / 2) - 40;
+    ctx.fillStyle = "#050811";
+    ctx.fillRect(monasX, groundY - 100, 80, 50);   // Cawan Monas
+    ctx.fillRect(monasX + 30, groundY - 220, 20, 120); // Tugu Monas
+    // Lidah Api Emas Monas
+    ctx.fillStyle = "#f59e0b";
+    ctx.fillRect(monasX + 32, groundY - 245, 16, 25);
+    ctx.fillStyle = "#fbbf24";
+    ctx.fillRect(monasX + 36, groundY - 240, 8, 15);
+
+    // 3. Pixel Clouds bergerak
+    ctx.fillStyle = pixelTheme === "hujan" ? "rgba(71, 85, 105, 0.6)" : "rgba(51, 65, 85, 0.5)";
     pixelClouds.forEach(c => {
       c.x += c.speed;
       if (c.x > canvas.width) c.x = -c.w;
-      ctx.fillRect(c.x, c.y, c.w, 14);
-      ctx.fillRect(c.x + 8, c.y - 6, c.w - 16, 8);
+      ctx.fillRect(c.x, c.y, c.w, 20);
+      ctx.fillRect(c.x + 12, c.y - 8, c.w - 24, 12);
     });
 
-    // 4. Efek Khusus Tema
+    // 4. Efek Khusus Dinamis Sesuai Berita Indonesia
     if (pixelTheme === "hujan") {
       ctx.fillStyle = "#38bdf8";
       raindrops.forEach(r => {
         r.y += r.speed;
-        if (r.y > 120) r.y = 0;
-        ctx.fillRect(r.x, r.y, 2, 6);
+        if (r.y > canvas.height) r.y = 0;
+        ctx.fillRect(r.x, r.y, 2, 8);
       });
     } else if (pixelTheme === "demo") {
-      // Animasi pixel kerumunan dan bendera di Bundaran HI
-      const time = Date.now() / 300;
-      const wave = Math.sin(time) * 3;
-      // Spanduk / Bendera Merah Putih
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(520, 80 + wave, 22, 7);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(520, 87 + wave, 22, 7);
+      // Demonstran Bundaran HI & Bendera Merah Putih berkibar
+      const time = Date.now() / 250;
+      const wave = Math.sin(time) * 4;
+      const demoX = monasX - 90;
+      
       // Tiang bendera
-      ctx.fillStyle = "#64748b";
-      ctx.fillRect(518, 75, 2, 35);
-      // Karakter pixel demonstran
+      ctx.fillStyle = "#94a3b8";
+      ctx.fillRect(demoX, groundY - 70, 3, 70);
+      // Bendera Merah Putih berkibar
+      ctx.fillStyle = "#ef4444";
+      ctx.fillRect(demoX + 3, groundY - 70 + wave, 28, 10);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(demoX + 3, groundY - 60 + wave, 28, 10);
+
+      // Karakter pixel massa berorasi
       ctx.fillStyle = "#cbd5e1";
-      ctx.fillRect(514, 100, 6, 8);
-      ctx.fillRect(530, 102, 6, 8);
-      ctx.fillRect(540, 101, 6, 8);
+      ctx.fillRect(demoX - 10, groundY - 25, 8, 12);
+      ctx.fillRect(demoX + 10, groundY - 27, 8, 12);
+      ctx.fillRect(demoX + 25, groundY - 24, 8, 12);
+      ctx.fillRect(demoX + 40, groundY - 26, 8, 12);
     }
 
     requestAnimationFrame(render);
@@ -1034,36 +1058,33 @@ function fetchNewsTopic() {
       if (res && res.data && res.data.posts && res.data.posts.length > 0) {
         const item = res.data.posts[0];
         const title = item.title;
-        document.getElementById("tickerHeadline").innerText = title;
-        document.getElementById("tickerTag").innerText = "BERITA INDONESIA TERKINI";
+        const headlineEl = document.getElementById("tickerHeadline");
+        const tagEl = document.getElementById("tickerTag");
+        const iconEl = document.getElementById("pixelBannerIcon");
+
+        if (headlineEl) headlineEl.innerText = title;
+        if (tagEl) tagEl.innerText = "BERITA INDONESIA TERKINI";
 
         const lower = title.toLowerCase();
-        if (lower.includes("demo") || lower.includes("aksi") || lower.includes("politik")) {
+        if (lower.includes("demo") || lower.includes("aksi") || lower.includes("politik") || lower.includes("dpr")) {
           pixelTheme = "demo";
-        } else if (lower.includes("hujan") || lower.includes("banjir") || lower.includes("cuaca")) {
+          if (iconEl) iconEl.innerText = "🚩";
+        } else if (lower.includes("hujan") || lower.includes("banjir") || lower.includes("cuaca") || lower.includes("bmkg")) {
           pixelTheme = "hujan";
+          if (iconEl) iconEl.innerText = "🌧️";
         } else {
           pixelTheme = "cerah";
+          if (iconEl) iconEl.innerText = "🏙️";
         }
       }
     })
     .catch(() => {
-      document.getElementById("tickerHeadline").innerText = "Massa mengawal aspirasi di kawasan Bundaran HI Jakarta";
-      document.getElementById("tickerTag").innerText = "AKSI BUNDARAN HI";
+      const headlineEl = document.getElementById("tickerHeadline");
+      const tagEl = document.getElementById("tickerTag");
+      const iconEl = document.getElementById("pixelBannerIcon");
+      if (headlineEl) headlineEl.innerText = "Aspirasi massa terpantau aktif di kawasan Bundaran HI Jakarta";
+      if (tagEl) tagEl.innerText = "AKSI BUNDARAN HI";
+      if (iconEl) iconEl.innerText = "🚩";
       pixelTheme = "demo";
     });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  initPixelCanvas();
-});
-
-function switchFlowView(idx) {
-  document.querySelectorAll(".flow-tab-btn").forEach(b => b.classList.remove("active"));
-  document.querySelectorAll(".flow-view").forEach(v => v.classList.remove("active"));
-
-  const btn = document.getElementById("btn-flow-" + idx);
-  const view = document.getElementById("flow-view-" + idx);
-  if (btn) btn.classList.add("active");
-  if (view) view.classList.add("active");
 }
