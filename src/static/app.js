@@ -1057,3 +1057,13 @@ function fetchNewsTopic() {
 document.addEventListener("DOMContentLoaded", () => {
   initPixelCanvas();
 });
+
+function switchFlowView(idx) {
+  document.querySelectorAll(".flow-tab-btn").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".flow-view").forEach(v => v.classList.remove("active"));
+
+  const btn = document.getElementById("btn-flow-" + idx);
+  const view = document.getElementById("flow-view-" + idx);
+  if (btn) btn.classList.add("active");
+  if (view) view.classList.add("active");
+}

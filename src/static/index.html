@@ -1,13 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Adminator - Immich Local Media Optimizer (ODROID-C2)</title>
   <link rel="stylesheet" href="/static/style.css">
-  <link rel=" icon\ type=\image/svg+xml\ href=\/static/favicon.svg\>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 </head>
 <body>
+  <!-- Dynamic Full-Screen Pixel Horizon Background -->
+  <canvas id="pixelBackgroundCanvas"></canvas>
   <!-- Auth Overlay Modal -->
   <div class="auth-modal" id="authModal" style="display: none;">
     <div class="auth-box">
@@ -252,109 +254,208 @@
     <div id="pane-node" class="tab-pane">
       <div class="fc-wrap">
         <div class="fc-title">🔄 Flowchart Real-Life: Alur Kerja &amp; Eksekusi Mesin Aktif</div>
-        <p class="fc-desc">Node yang menyala dan berkedip menunjukkan tahapan aktif yang sedang dijalankan prosesor ODROID-C2 saat ini secara real-time.</p>
+        <p class="fc-desc">Pilih mode alur kerja di bawah untuk melihat rincian langkah teknis mesin ODROID-C2 secara interaktif.</p>
         
-        <svg class="fc-svg" id="live-svg" viewBox="0 0 1180 340" preserveAspectRatio="xMidYMid meet">
-          <defs>
-            <marker id="ah" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#94a3b8"></path></marker>
-            <marker id="ahb" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#2196f3"></path></marker>
-            <marker id="ahr" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#f83245"></path></marker>
-            <marker id="ahg" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#00d284"></path></marker>
-          </defs>
+        <!-- View Switcher -->
+        <div class="flow-switcher">
+          <button class="flow-tab-btn active" id="btn-flow-1" onclick="switchFlowView(1)">1. Alur Lengkap Linier</button>
+          <button class="flow-tab-btn" id="btn-flow-2" onclick="switchFlowView(2)">2. Alur Cabang Foto vs Video</button>
+          <button class="flow-tab-btn" id="btn-flow-3" onclick="switchFlowView(3)">3. Alur Prioritas Antrean</button>
+        </div>
 
-          <!-- Smooth n8n-style Bezier Curved Connections -->
-          <g class="ed"><path d="M125,150 C140,150 140,150 155,150" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
-          <g class="ed"><path d="M265,150 C280,150 280,150 295,150" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
-          <g class="ed"><path d="M405,150 C420,150 420,150 435,150" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
-          <g class="ed"><path d="M575,150 C590,150 590,150 605,150" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
-          
-          <!-- Percabangan Bandingkan -> Replace vs Skip -->
-          <g class="ed"><path d="M715,150 C745,150 745,85 775,85" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
-          <g class="ed"><path d="M715,150 C745,150 745,215 775,215" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+        <!-- VIEW 1: ALUR LENGKAP LINIER -->
+        <div class="flow-view active" id="flow-view-1">
+          <svg class="fc-svg" id="live-svg-1" viewBox="0 0 1180 280" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <marker id="ah" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#94a3b8"></path></marker>
+              <marker id="ahb" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#2196f3"></path></marker>
+              <marker id="ahr" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#f83245"></path></marker>
+              <marker id="ahg" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#00d284"></path></marker>
+            </defs>
 
-          <!-- Dual Target Cloud: Replace -> MEGA & Google Photos -->
-          <g class="ed"><path d="M925,85 C950,85 950,65 975,65" stroke="#00d284" stroke-width="2.5" fill="none" marker-end="url(#ahg)"></path></g>
-          <g class="ed"><path d="M925,85 C950,85 950,140 975,140" stroke="#00d284" stroke-width="2.5" fill="none" marker-end="url(#ahg)"></path></g>
+            <!-- Connections -->
+            <g class="ed"><path d="M125,140 C140,140 140,140 155,140" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+            <g class="ed"><path d="M265,140 C280,140 280,140 295,140" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+            <g class="ed"><path d="M405,140 C420,140 420,140 435,140" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+            <g class="ed"><path d="M575,140 C590,140 590,140 605,140" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+            
+            <!-- Replace vs Skip Branches -->
+            <g class="ed"><path d="M715,140 C745,140 745,75 775,75" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+            <g class="ed"><path d="M715,140 C745,140 745,205 775,205" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
 
-          <!-- Dual Target Cloud: Skip (Ambil Berkas Asli) -> MEGA -->
-          <g class="ed"><path d="M925,215 C950,215 950,65 975,65" stroke="#ffab00" stroke-width="2" stroke-dasharray="4 4" fill="none" marker-end="url(#ah)"></path></g>
+            <!-- To MEGA Vault -->
+            <g class="ed"><path d="M925,75 C950,75 950,140 975,140" stroke="#00d284" stroke-width="2.5" fill="none" marker-end="url(#ahg)"></path></g>
+            <g class="ed"><path d="M925,205 C950,205 950,140 975,140" stroke="#ffab00" stroke-width="2" stroke-dasharray="4 4" fill="none" marker-end="url(#ah)"></path></g>
 
-          <!-- Jalur Bypass FORCE -->
-          <g class="bp"><path d="M210,115 C210,35 505,35 505,115" fill="none" stroke="#ffab00" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#ah)"></path><text x="350" y="28" fill="#ffab00" font-size="11" font-weight="700" text-anchor="middle">MODE FORCE (Bypass Jadwal)</text></g>
+            <!-- Force Bypass -->
+            <g class="bp"><path d="M210,105 C210,25 505,25 505,105" fill="none" stroke="#ffab00" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#ah)"></path><text x="350" y="22" fill="#ffab00" font-size="11" font-weight="700" text-anchor="middle">MODE FORCE (Bypass Jadwal)</text></g>
 
-          <!-- Node 1: Start Loop (n8n Card Style) -->
-          <g class="flow-node" id="fn-start" style="cursor:pointer;" onclick="showNodeInspect('Start Loop', 'Trigger pemindai folder media Immich secara berkala untuk mendeteksi unggahan baru.')">
-            <rect x="20" y="120" width="105" height="60" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
-            <circle cx="20" cy="150" r="4" fill="#64748b"></circle><circle cx="125" cy="150" r="4" fill="#64748b"></circle>
-            <text x="72" y="145" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">⚡ Start Loop</text>
-            <text x="72" y="162" fill="#94a3b8" text-anchor="middle" font-size="9" id="live-lbl-queue">Cek Antrean</text>
-          </g>
+            <!-- Node 1: Start Loop -->
+            <g class="flow-node" id="fn-start" style="cursor:pointer;" onclick="showNodeInspect('Start Loop (Scanner)', 'Path: /mnt/hdd1/immich/upload/upload | Interval: 30s | MIME: .jpg, .heic, .mp4, .mov')">
+              <rect x="20" y="110" width="105" height="60" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
+              <circle cx="20" cy="140" r="4" fill="#64748b"></circle><circle cx="125" cy="140" r="4" fill="#64748b"></circle>
+              <text x="72" y="135" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">⚡ Start Loop</text>
+              <text x="72" y="152" fill="#94a3b8" text-anchor="middle" font-size="9" id="live-lbl-queue">Cek Antrean</text>
+            </g>
 
-          <!-- Node 2: Cek Suhu (Thermal Guard) -->
-          <g class="flow-node" id="fn-temp_check" style="cursor:pointer;" onclick="showNodeInspect('Thermal Guard', 'Memantau sensor suhu SoC S905X. Throttle otomatis jika suhu di atas 68°C.')">
-            <rect x="155" y="120" width="110" height="60" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
-            <circle cx="155" cy="150" r="4" fill="#64748b"></circle><circle cx="265" cy="150" r="4" fill="#64748b"></circle>
-            <text x="210" y="145" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">🌡️ Cek Suhu</text>
-            <text x="210" y="162" fill="#94a3b8" text-anchor="middle" font-size="9" id="live-lbl-temp">&lt; 68°C • 3 Cores</text>
-          </g>
+            <!-- Node 2: Cek Suhu -->
+            <g class="flow-node" id="fn-temp_check" style="cursor:pointer;" onclick="showNodeInspect('Thermal Guard', 'Sensor: /sys/class/thermal/thermal_zone0/temp | Limit: 68°C | Cap: Core 1-3')">
+              <rect x="155" y="110" width="110" height="60" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
+              <circle cx="155" cy="140" r="4" fill="#64748b"></circle><circle cx="265" cy="140" r="4" fill="#64748b"></circle>
+              <text x="210" y="135" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">🌡️ Cek Suhu</text>
+              <text x="210" y="152" fill="#94a3b8" text-anchor="middle" font-size="9" id="live-lbl-temp">&lt; 68°C • 3 Cores</text>
+            </g>
 
-          <!-- Node 3: Cek Waktu / Jadwal -->
-          <g class="flow-node" id="fn-time_check" style="cursor:pointer;" onclick="showNodeInspect('Cek Jadwal', 'Memeriksa jendela waktu operasional atau bypass 24 jam non-stop jika mode Force.')">
-            <rect x="295" y="120" width="110" height="60" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
-            <circle cx="295" cy="150" r="4" fill="#64748b"></circle><circle cx="405" cy="150" r="4" fill="#64748b"></circle>
-            <text x="350" y="145" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">🕒 Cek Jadwal</text>
-            <text x="350" y="162" fill="#94a3b8" text-anchor="middle" font-size="9" id="live-lbl-schedule">24 Jam Non-Stop</text>
-          </g>
+            <!-- Node 3: Cek Jadwal -->
+            <g class="flow-node" id="fn-time_check" style="cursor:pointer;" onclick="showNodeInspect('Cek Jadwal', 'Jadwal Normal: 01:00-06:00 | Mode Force: 24 Jam Non-Stop')">
+              <rect x="295" y="110" width="110" height="60" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
+              <circle cx="295" cy="140" r="4" fill="#64748b"></circle><circle cx="405" cy="140" r="4" fill="#64748b"></circle>
+              <text x="350" y="135" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">🕒 Cek Jadwal</text>
+              <text x="350" y="152" fill="#94a3b8" text-anchor="middle" font-size="9" id="live-lbl-schedule">24 Jam Non-Stop</text>
+            </g>
 
-          <!-- Node 4: Kompresi FFmpeg & ExifTool -->
-          <g class="flow-node" id="fn-compress" style="cursor:pointer;" onclick="showNodeInspect('Kompresi Media', 'Encoding X265 / ImageMagick dengan nice 15 dan ionice 3. Preservasi 100% rasio asli & Live Photos.')">
-            <rect x="435" y="115" width="140" height="70" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
-            <circle cx="435" cy="150" r="4" fill="#64748b"></circle><circle cx="575" cy="150" r="4" fill="#64748b"></circle>
-            <text x="505" y="142" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">⚙️ Kompresi Media</text>
-            <text x="505" y="157" fill="#38bdf8" text-anchor="middle" font-size="10">X265 (Max 3 Threads)</text>
-            <text x="505" y="171" fill="#00d284" text-anchor="middle" font-weight="600" font-size="8">+ Live Photo & GPS Safe</text>
-          </g>
+            <!-- Node 4: Kompresi Media -->
+            <g class="flow-node" id="fn-compress" style="cursor:pointer;" onclick="showNodeInspect('Kompresi Media', 'FFmpeg: -c:v libx265 -crf 26 -preset ultrafast -threads 3 -nice 15 | Rasio: 100% Asli')">
+              <rect x="435" y="105" width="140" height="70" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
+              <circle cx="435" cy="140" r="4" fill="#64748b"></circle><circle cx="575" cy="140" r="4" fill="#64748b"></circle>
+              <text x="505" y="132" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">⚙️ Kompresi Media</text>
+              <text x="505" y="147" fill="#38bdf8" text-anchor="middle" font-size="10">X265 (Max 3 Threads)</text>
+              <text x="505" y="161" fill="#00d284" text-anchor="middle" font-weight="600" font-size="8">+ Live Photo &amp; GPS Safe</text>
+            </g>
 
-          <!-- Node 5: Bandingkan Ukuran -->
-          <g class="flow-node" id="fn-compare" style="cursor:pointer;" onclick="showNodeInspect('Evaluasi Ukuran', 'Membandingkan ukuran hasil vs asli. Selalu mengambil berkas teringan dan aman.')">
-            <rect x="605" y="120" width="110" height="60" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
-            <circle cx="605" cy="150" r="4" fill="#64748b"></circle><circle cx="715" cy="150" r="4" fill="#64748b"></circle>
-            <text x="660" y="145" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">⚖️ Bandingkan</text>
-            <text x="660" y="162" fill="#94a3b8" text-anchor="middle" font-size="9">Hasil &lt; Asli?</text>
-          </g>
+            <!-- Node 5: Bandingkan -->
+            <g class="flow-node" id="fn-compare" style="cursor:pointer;" onclick="showNodeInspect('Evaluasi Ukuran', 'Kategori: <1MB EFISIEN | 1-2MB HEMAT | >2MB BETTER | >=orig BOROS')">
+              <rect x="605" y="110" width="110" height="60" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
+              <circle cx="605" cy="140" r="4" fill="#64748b"></circle><circle cx="715" cy="140" r="4" fill="#64748b"></circle>
+              <text x="660" y="135" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">⚖️ Bandingkan</text>
+              <text x="660" y="152" fill="#94a3b8" text-anchor="middle" font-size="9">Hasil &lt; Asli?</text>
+            </g>
 
-          <!-- Node 6A: Replace (Hemat) -->
-          <g class="flow-node" id="fn-replace" style="cursor:pointer;" onclick="showNodeInspect('YA: Replace', 'Hasil kompresi terbukti lebih hemat dan metadata terverifikasi utuh. Menggantikan berkas asli.')">
-            <rect x="775" y="55" width="150" height="55" rx="10" fill="#064e3b" stroke="#00d284" stroke-width="2"></rect>
-            <circle cx="775" cy="85" r="4" fill="#00d284"></circle><circle cx="925" cy="85" r="4" fill="#00d284"></circle>
-            <text x="850" y="78" fill="#6ee7b7" text-anchor="middle" font-size="12" font-weight="bold">✅ YA: Replace</text>
-            <text x="850" y="96" fill="#a7f3d0" text-anchor="middle" font-size="9">Ambil Hasil Kompres</text>
-          </g>
+            <!-- Node 6A: Replace -->
+            <g class="flow-node" id="fn-replace" style="cursor:pointer;" onclick="showNodeInspect('YA: Replace', 'Operasi: POSIX atomic swap .bak_opt -> Target | Hemat Storage Immich')">
+              <rect x="775" y="45" width="150" height="55" rx="10" fill="#064e3b" stroke="#00d284" stroke-width="2"></rect>
+              <circle cx="775" cy="75" r="4" fill="#00d284"></circle><circle cx="925" cy="75" r="4" fill="#00d284"></circle>
+              <text x="850" y="68" fill="#6ee7b7" text-anchor="middle" font-size="12" font-weight="bold">✅ YA: Replace</text>
+              <text x="850" y="86" fill="#a7f3d0" text-anchor="middle" font-size="9">Ambil Hasil Kompres</text>
+            </g>
 
-          <!-- Node 6B: Skip (Boros) -->
-          <g class="flow-node" id="fn-skip" style="cursor:pointer;" onclick="showNodeInspect('TIDAK: Skip', 'Hasil kompresi lebih besar dari asli atau Live Photo gagal. Berkas asli dipertahankan 100% utuh.')">
-            <rect x="775" y="185" width="150" height="55" rx="10" fill="#78350f" stroke="#ffab00" stroke-width="2"></rect>
-            <circle cx="775" cy="215" r="4" fill="#ffab00"></circle><circle cx="925" cy="215" r="4" fill="#ffab00"></circle>
-            <text x="850" y="208" fill="#fde047" text-anchor="middle" font-size="12" font-weight="bold">🛡️ TIDAK: Skip</text>
-            <text x="850" y="226" fill="#fef08a" text-anchor="middle" font-size="9">Ambil Berkas Asli (Teringan)</text>
-          </g>
+            <!-- Node 6B: Skip -->
+            <g class="flow-node" id="fn-skip" style="cursor:pointer;" onclick="showNodeInspect('TIDAK: Skip', 'Operasi: Discard kompresi temp | Pertahankan file asli 100% tanpa diubah')">
+              <rect x="775" y="175" width="150" height="55" rx="10" fill="#78350f" stroke="#ffab00" stroke-width="2"></rect>
+              <circle cx="775" cy="205" r="4" fill="#ffab00"></circle><circle cx="925" cy="205" r="4" fill="#ffab00"></circle>
+              <text x="850" y="198" fill="#fde047" text-anchor="middle" font-size="12" font-weight="bold">🛡️ TIDAK: Skip</text>
+              <text x="850" y="216" fill="#fef08a" text-anchor="middle" font-size="9">Ambil Berkas Asli (Teringan)</text>
+            </g>
 
-          <!-- Node 7A: Dual Cloud -> MEGA Vault -->
-          <g class="flow-node" id="fn-sync" style="cursor:pointer;" onclick="showNodeInspect('MEGA Vault Sync', 'Menyinkronkan berkas teringan ke cloud MEGA via Rclone saat CPU idle (<40%).')">
-            <rect x="975" y="35" width="160" height="55" rx="10" fill="#182234" stroke="#2196f3" stroke-width="2"></rect>
-            <circle cx="975" cy="65" r="4" fill="#2196f3"></circle><circle cx="1135" cy="65" r="4" fill="#2196f3"></circle>
-            <text x="1055" y="58" fill="#60a5fa" text-anchor="middle" font-size="12" font-weight="bold">☁️ MEGA Vault</text>
-            <text x="1055" y="76" fill="#94a3b8" text-anchor="middle" font-size="9">Rclone Sync (Teringan)</text>
-          </g>
+            <!-- Node 7: MEGA Vault Sync -->
+            <g class="flow-node" id="fn-sync" style="cursor:pointer;" onclick="showNodeInspect('MEGA Vault Backup', 'Rclone remote: mega:ImmichBackup | Subfolder: /YYYY/MM/DD/ | Teringan')">
+              <rect x="975" y="110" width="165" height="60" rx="10" fill="#182234" stroke="#2196f3" stroke-width="2"></rect>
+              <circle cx="975" cy="140" r="4" fill="#2196f3"></circle><circle cx="1140" cy="140" r="4" fill="#2196f3"></circle>
+              <text x="1057" y="135" fill="#60a5fa" text-anchor="middle" font-size="12" font-weight="bold">☁️ MEGA Vault</text>
+              <text x="1057" y="152" fill="#94a3b8" text-anchor="middle" font-size="9">Rclone Sync (Teringan)</text>
+            </g>
+          </svg>
+        </div>
 
-          <!-- Node 7B: Dual Cloud -> Google Photos -->
-          <g class="flow-node" id="fn-sync-gphotos" style="cursor:pointer;" onclick="showNodeInspect('Google Photos Backup', 'Menyinkronkan berkas teringan ke Google Photos via Rclone.')">
-            <rect x="975" y="115" width="160" height="55" rx="10" fill="#182234" stroke="#a855f7" stroke-width="2"></rect>
-            <circle cx="975" cy="140" r="4" fill="#a855f7"></circle><circle cx="1135" cy="140" r="4" fill="#a855f7"></circle>
-            <text x="1055" y="138" fill="#d8b4fe" text-anchor="middle" font-size="12" font-weight="bold">📷 Google Photos</text>
-            <text x="1055" y="156" fill="#94a3b8" text-anchor="middle" font-size="9">Rclone Upload (Teringan)</text>
-          </g>
-        </svg>
+        <!-- VIEW 2: ALUR CABANG FOTO VS VIDEO -->
+        <div class="flow-view" id="flow-view-2">
+          <svg class="fc-svg" id="live-svg-2" viewBox="0 0 1180 300" preserveAspectRatio="xMidYMid meet">
+            <!-- Connections -->
+            <g class="ed"><path d="M140,150 C170,150 170,80 200,80" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+            <g class="ed"><path d="M140,150 C170,150 170,220 200,220" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+            <g class="ed"><path d="M370,80 C400,80 400,150 430,150" stroke="#00d284" stroke-width="2.5" fill="none" marker-end="url(#ahg)"></path></g>
+            <g class="ed"><path d="M370,220 C400,220 400,150 430,150" stroke="#38bdf8" stroke-width="2.5" fill="none" marker-end="url(#ahb)"></path></g>
+            <g class="ed"><path d="M600,150 C630,150 630,150 660,150" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+            <g class="ed"><path d="M830,150 C860,150 860,150 890,150" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+
+            <!-- Dispatcher Node -->
+            <g class="flow-node" onclick="showNodeInspect('MIME Type Dispatcher', 'Memilah berkas masuk berdasarkan format: Foto (JPEG, PNG, HEIC, WEBP) vs Video (MP4, MOV, MKV, AVI)')">
+              <rect x="20" y="120" width="120" height="60" rx="10" fill="#182234" stroke="#6366f1" stroke-width="2"></rect>
+              <text x="80" y="145" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">🔀 Dispatcher</text>
+              <text x="80" y="162" fill="#a5b4fc" text-anchor="middle" font-size="9">Cek MIME Type</text>
+            </g>
+
+            <!-- Photo Pipeline -->
+            <g class="flow-node" onclick="showNodeInspect('Jalur Foto (ImageMagick)', 'Kualitas: 82% | Max Dimensi: 2560px (Rasio Asli 100% Tetap) | Preservasi EXIF & Live Photo UUID')">
+              <rect x="200" y="50" width="170" height="60" rx="10" fill="#064e3b" stroke="#00d284" stroke-width="2"></rect>
+              <text x="285" y="75" fill="#6ee7b7" text-anchor="middle" font-size="12" font-weight="bold">📷 Jalur Foto</text>
+              <text x="285" y="93" fill="#a7f3d0" text-anchor="middle" font-size="9">ImageMagick + ExifTool</text>
+            </g>
+
+            <!-- Video Pipeline -->
+            <g class="flow-node" onclick="showNodeInspect('Jalur Video (FFmpeg X265)', 'Codec: libx265 | CRF: 26 | Max 3 Threads | Nice 15 & Ionice 3 | Salin Audio & GPS Tags')">
+              <rect x="200" y="190" width="170" height="60" rx="10" fill="#0c4a6e" stroke="#0284c7" stroke-width="2"></rect>
+              <text x="285" y="215" fill="#7dd3fc" text-anchor="middle" font-size="12" font-weight="bold">🎬 Jalur Video</text>
+              <text x="285" y="233" fill="#bae6fd" text-anchor="middle" font-size="9">FFmpeg H.265 (Max 3 Cores)</text>
+            </g>
+
+            <!-- Metadata Integrity -->
+            <g class="flow-node" onclick="showNodeInspect('Verifikasi Integritas Metadata', 'Memastikan ContentIdentifier Apple Live Photo tidak hilang. Jika tidak identik -> batalkan kompresi!')">
+              <rect x="430" y="120" width="170" height="60" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
+              <text x="515" y="145" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">🔍 Integritas Metadata</text>
+              <text x="515" y="162" fill="#94a3b8" text-anchor="middle" font-size="9">Live Photo &amp; GPS Guard</text>
+            </g>
+
+            <!-- Lightest File Selector -->
+            <g class="flow-node" onclick="showNodeInspect('Seleksi Berkas Teringan', 'Bandingkan ukuran byte asli vs hasil. File teringan yang dipilih untuk Immich dan Cloud Sync')">
+              <rect x="660" y="120" width="170" height="60" rx="10" fill="#182234" stroke="#f59e0b" stroke-width="2"></rect>
+              <text x="745" y="145" fill="#fde047" text-anchor="middle" font-size="12" font-weight="bold">⚖️ Seleksi Teringan</text>
+              <text x="745" y="162" fill="#fef08a" text-anchor="middle" font-size="9">Min(Asli, Hasil Kompres)</text>
+            </g>
+
+            <!-- Sync Vault -->
+            <g class="flow-node" onclick="showNodeInspect('MEGA Vault Sync', 'Unggah berkas teringan yang terpilih ke mega:ImmichBackup/YYYY/MM/DD/')">
+              <rect x="890" y="120" width="160" height="60" rx="10" fill="#182234" stroke="#2196f3" stroke-width="2"></rect>
+              <text x="970" y="145" fill="#60a5fa" text-anchor="middle" font-size="12" font-weight="bold">☁️ MEGA Vault</text>
+              <text x="970" y="162" fill="#94a3b8" text-anchor="middle" font-size="9">Rclone Sinkronisasi</text>
+            </g>
+          </svg>
+        </div>
+
+        <!-- VIEW 3: ALUR PRIORITAS ANTREAN -->
+        <div class="flow-view" id="flow-view-3">
+          <svg class="fc-svg" id="live-svg-3" viewBox="0 0 1180 280" preserveAspectRatio="xMidYMid meet">
+            <g class="ed"><path d="M140,140 L190,140" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+            <g class="ed"><path d="M360,140 L410,140" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+            <g class="ed"><path d="M580,140 L630,140" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+            <g class="ed"><path d="M800,140 L850,140" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#ah)"></path></g>
+
+            <!-- Ingestion Queue -->
+            <g class="flow-node" onclick="showNodeInspect('Antrean Masuk Immich', 'Membaca antrean file baru yang diunggah pengguna ke /mnt/hdd1/immich/upload')">
+              <rect x="20" y="110" width="120" height="60" rx="10" fill="#182234" stroke="#334155" stroke-width="2"></rect>
+              <text x="80" y="135" fill="#fff" text-anchor="middle" font-size="12" font-weight="bold">📥 Antrean Masuk</text>
+              <text x="80" y="152" fill="#94a3b8" text-anchor="middle" font-size="9">FIFO Scanner</text>
+            </g>
+
+            <!-- Priority Sorter -->
+            <g class="flow-node" onclick="showNodeInspect('Pengatur Prioritas (Batch Sorter)', 'Prioritas 1: Foto ringan (proses cepat membebaskan RAM) | Prioritas 2: Video (dialokasikan bertahap agar CPU tidak overload)')">
+              <rect x="190" y="110" width="170" height="60" rx="10" fill="#182234" stroke="#a855f7" stroke-width="2"></rect>
+              <text x="275" y="135" fill="#d8b4fe" text-anchor="middle" font-size="12" font-weight="bold">⚡ Sorter Prioritas</text>
+              <text x="275" y="152" fill="#c084fc" text-anchor="middle" font-size="9">Foto Cepat &gt; Video Berat</text>
+            </g>
+
+            <!-- Resource Lock -->
+            <g class="flow-node" onclick="showNodeInspect('Kunci Resource (Thermal & RAM Guard)', 'Memeriksa kapasitas RAM (min 500MB bebas) dan suhu (<68°C) sebelum melepaskan antrean ke worker')">
+              <rect x="410" y="110" width="170" height="60" rx="10" fill="#182234" stroke="#f59e0b" stroke-width="2"></rect>
+              <text x="495" y="135" fill="#fbbf24" text-anchor="middle" font-size="12" font-weight="bold">🔒 Kunci Resource</text>
+              <text x="495" y="152" fill="#fde68a" text-anchor="middle" font-size="9">RAM &gt;500MB &amp; Temp &lt;68°C</text>
+            </g>
+
+            <!-- Worker Execution -->
+            <g class="flow-node" onclick="showNodeInspect('Eksekusi Worker (Max 3 Threads)', 'Mengerjakan file dengan CPU throttle nice 15 dan ionice 3 agar layanan Immich tetap lancar')">
+              <rect x="630" y="110" width="170" height="60" rx="10" fill="#064e3b" stroke="#00d284" stroke-width="2"></rect>
+              <text x="715" y="135" fill="#6ee7b7" text-anchor="middle" font-size="12" font-weight="bold">⚙️ Worker Pool</text>
+              <text x="715" y="152" fill="#a7f3d0" text-anchor="middle" font-size="9">Maksimal 3 Thread Core</text>
+            </g>
+
+            <!-- Cloud Outbox -->
+            <g class="flow-node" onclick="showNodeInspect('Antrean Cloud Outbox', 'Menampung hasil seleksi teringan untuk diunggah ke MEGA secara bertahap saat koneksi idle')">
+              <rect x="850" y="110" width="170" height="60" rx="10" fill="#182234" stroke="#2196f3" stroke-width="2"></rect>
+              <text x="935" y="135" fill="#60a5fa" text-anchor="middle" font-size="12" font-weight="bold">📤 Outbox Cloud</text>
+              <text x="935" y="152" fill="#93c5fd" text-anchor="middle" font-size="9">Upload Bertahap</text>
+            </g>
+          </svg>
+        </div>
       </div>
 
       <div class="panel">
