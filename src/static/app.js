@@ -1153,25 +1153,51 @@ function initSidebarPixelDiorama() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // ==========================================
-    // LAYER 1: LANGIT / ATMOSFER (Deep Sky Gradient)
+    // LAYER 1: LANGIT & LATAR KHUSUS TEMA (SANGAT BERBEDA TIAP TEMA)
     // ==========================================
     let sky = ctx.createLinearGradient(0, 0, 0, 125);
-    if (currentTheme === "hujan") {
-      sky.addColorStop(0, "#090d16");
-      sky.addColorStop(1, "#182338");
-    } else if (currentTheme === "demo") {
-      sky.addColorStop(0, "#140e2b");
-      sky.addColorStop(0.6, "#24184c");
-      sky.addColorStop(1, "#3b226e");
+    if (currentTheme === "demo") {
+      // TEMA 1: AKSI BUNDARAN HI - Langit Senja Merah Oranye Berapi
+      sky.addColorStop(0, "#450a0a");
+      sky.addColorStop(0.5, "#7f1d1d");
+      sky.addColorStop(1, "#b45309");
+    } else if (currentTheme === "hujan") {
+      // TEMA 2: BMKG HUJAN - Langit Badai Kelabu Petir
+      sky.addColorStop(0, "#020617");
+      sky.addColorStop(0.5, "#0f172a");
+      sky.addColorStop(1, "#1e293b");
     } else if (currentTheme === "ekonomi") {
-      sky.addColorStop(0, "#06221f");
-      sky.addColorStop(1, "#0f4239");
+      // TEMA 3: EKONOMI/IHSG - Langit Hijau Cyberpunk Matrix
+      sky.addColorStop(0, "#022c22");
+      sky.addColorStop(0.5, "#064e3b");
+      sky.addColorStop(1, "#047857");
     } else {
-      sky.addColorStop(0, "#080e1c");
-      sky.addColorStop(1, "#152445");
+      // TEMA 4: NASIONAL - Langit Siang Terang Biru Tropis Indonesia
+      sky.addColorStop(0, "#0284c7");
+      sky.addColorStop(0.6, "#38bdf8");
+      sky.addColorStop(1, "#bae6fd");
     }
     ctx.fillStyle = sky;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Matahari Siang / Bulan Malam Khusus
+    if (currentTheme === "nasional") {
+      // Matahari Terang Pixel
+      ctx.fillStyle = "#fef08a";
+      ctx.fillRect(180, 15, 18, 18);
+      ctx.fillStyle = "#fde047";
+      ctx.fillRect(182, 17, 14, 14);
+    } else if (currentTheme === "demo") {
+      // Matahari Terbenam Senja
+      ctx.fillStyle = "#f97316";
+      ctx.fillRect(25, 45, 24, 24);
+    } else if (currentTheme === "hujan") {
+      // Kilatan Petir Sesekali
+      if (Math.random() < 0.04) {
+        ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+    }
 
     // Bintang Berkedip (Twinkling Stars)
     ctx.fillStyle = "#ffffff";

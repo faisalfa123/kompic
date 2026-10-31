@@ -788,6 +788,81 @@
             </div>
           </div>
         </div>
+
+        <!-- Real-Time 4-Core Telemetry & Worker Thread Inspection -->
+        <div class="panel" style="margin-top:1.5rem;">
+          <div class="fc-title">⚡ Pantauan Beban 4 Core Prosesor (Amlogic S905X ARM64)</div>
+          <p class="fc-desc">Core 0 dialokasikan eksklusif untuk layanan Immich &amp; OS, sementara Core 1–3 dialokasikan untuk Optimizer (Cap 3 Core / 75%).</p>
+          
+          <div class="cores-grid" id="dev-cores-container" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:12px;">
+            <div class="core-card" style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:12px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-weight:700; color:#38bdf8;">Core 0 (Immich / OS)</span>
+                <span style="font-weight:700; color:#00d284;" id="core-pct-0">--%</span>
+              </div>
+              <div style="height:8px; background:#1e293b; border-radius:4px; overflow:hidden;">
+                <div id="core-bar-0" style="height:100%; width:20%; background:#00d284;"></div>
+              </div>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:6px;">1512 MHz • Dedicated Host</div>
+            </div>
+
+            <div class="core-card" style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:12px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-weight:700; color:#fbbf24;">Core 1 (Worker #1)</span>
+                <span style="font-weight:700; color:#fbbf24;" id="core-pct-1">--%</span>
+              </div>
+              <div style="height:8px; background:#1e293b; border-radius:4px; overflow:hidden;">
+                <div id="core-bar-1" style="height:100%; width:65%; background:#fbbf24;"></div>
+              </div>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:6px;">1512 MHz • Taskset 0x0E (Nice 15)</div>
+            </div>
+
+            <div class="core-card" style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:12px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-weight:700; color:#fbbf24;">Core 2 (Worker #2)</span>
+                <span style="font-weight:700; color:#fbbf24;" id="core-pct-2">--%</span>
+              </div>
+              <div style="height:8px; background:#1e293b; border-radius:4px; overflow:hidden;">
+                <div id="core-bar-2" style="height:100%; width:70%; background:#fbbf24;"></div>
+              </div>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:6px;">1512 MHz • Taskset 0x0E (Nice 15)</div>
+            </div>
+
+            <div class="core-card" style="background:#0f172a; border:1px solid #334155; border-radius:8px; padding:12px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-weight:700; color:#fbbf24;">Core 3 (Worker #3)</span>
+                <span style="font-weight:700; color:#fbbf24;" id="core-pct-3">--%</span>
+              </div>
+              <div style="height:8px; background:#1e293b; border-radius:4px; overflow:hidden;">
+                <div id="core-bar-3" style="height:100%; width:60%; background:#fbbf24;"></div>
+              </div>
+              <div style="font-size:0.75rem; color:#94a3b8; margin-top:6px;">1512 MHz • Taskset 0x0E (Nice 15)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Worker Threads & Process Inspection Table -->
+        <div class="panel" style="margin-top:1.5rem;">
+          <div class="fc-title">🧵 Rincian Thread &amp; Pekerja Prosesor Aktif</div>
+          <p class="fc-desc">Daftar thread internal dan proses worker yang dialokasikan untuk kompresi dan penjadwalan.</p>
+          <div class="files-table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nama Pekerja / Thread</th>
+                  <th>Tipe</th>
+                  <th>Tugas / Eksekusi Saat Ini</th>
+                  <th>Afinitas Core</th>
+                  <th>Prioritas Sistem</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbl-threads-body">
+                <tr><td colspan="6" style="text-align:center; color:var(--adm-text-dim);">Memuat rincian thread...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
