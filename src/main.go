@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"encoding/xml"
+	"io"
 	"fmt"
 	"log"
 	"net/http"
@@ -1822,6 +1824,115 @@ func handleRoutes(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasPrefix(path, "/static/") {
 		http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP(w, r)
+		return
+	}
+
+	// Live Indonesian News & BMKG RSS Feeds Endpoint
+	if path == "/api/news" {
+		type RSSItem struct {
+			Title   string `xml:"title"`
+			Link    string `xml:"link"`
+			PubDate string `xml:"pubDate"`
+		}
+		type RSSChannel struct {
+			Title string    `xml:"title"`
+			Items []RSSItem `xml:"item"`
+		}
+		type RSSRoot struct {
+			Channel RSSChannel `xml:"channel"`
+		}
+
+		var results []map[string]string
+
+		// 1. Fetch Official ANTARA News RSS
+		client := &http.Client{Timeout: 5 * time.Second}
+		if resp, err := client.Get("https://www.antaranews.com/rss/terkini.xml"); err == nil {
+			defer resp.Body.Close()
+			if body, err := io.ReadAll(resp.Body); err == nil {
+				var rss RSSRoot
+				if err := xml.Unmarshal(body, &rss); err == nil {
+					for _, itm := range rss.Channel.Items {
+						t := strings.TrimSpace(itm.Title)
+						l := strings.TrimSpace(itm.Link)
+						if t != "" && l != "" {
+							theme := "nasional"
+							tag := "BERITA NASIONAL"
+							lower := strings.ToLower(t)
+							if strings.Contains(lower, "demo") || strings.Contains(lower, "aksi") || strings.Contains(lower, "politik") || strings.Contains(lower, "aspirasi") || strings.Contains(lower, "dpr") || strings.Contains(lower, "sidang") {
+								theme = "demo"
+								tag = "AKSI BUNDARAN HI"
+							} else if strings.Contains(lower, "hujan") || strings.Contains(lower, "cuaca") || strings.Contains(lower, "bmkg") || strings.Contains(lower, "banjir") || strings.Contains(lower, "angin") {
+								theme = "hujan"
+								tag = "BMKG & CUACA"
+							} else if strings.Contains(lower, "ihsg") || strings.Contains(lower, "ekonomi") || strings.Contains(lower, "rupiah") || strings.Contains(lower, "saham") || strings.Contains(lower, "pasar") || strings.Contains(lower, "bisnis") {
+								theme = "ekonomi"
+								tag = "PASAR & BISNIS"
+							}
+							results = append(results, map[string]string{
+								"title": t,
+								"link":  l,
+								"theme": theme,
+								"tag":   tag,
+								"date":  "ANTARA News Resmi",
+							})
+							if len(results) >= 8 {
+								break
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// 2. Fetch BMKG Official Cuaca / Gempabumi
+		if resp, err := client.Get("https://data.bmkg.go.id/DataMKG/TEWS/autogempa.json"); err == nil {
+			defer resp.Body.Close()
+			if body, err := io.ReadAll(resp.Body); err == nil {
+				var bmkg struct {
+					Infogempa struct {
+						Gempa struct {
+							Tanggal   string `json:"Tanggal"`
+							Jam       string `json:"Jam"`
+							Magnitude string `json:"Magnitude"`
+							Wilayah   string `json:"Wilayah"`
+							Potensi   string `json:"Potensi"`
+						} `json:"gempa"`
+					} `json:"Infogempa"`
+				}
+				if err := json.Unmarshal(body, &bmkg); err == nil && bmkg.Infogempa.Gempa.Wilayah != "" {
+					g := bmkg.Infogempa.Gempa
+					results = append(results, map[string]string{
+						"title": fmt.Sprintf("BMKG: Gempa M %s - %s (%s). %s", g.Magnitude, g.Wilayah, g.Jam, g.Potensi),
+						"link":  "https://www.bmkg.go.id/",
+						"theme": "hujan",
+						"tag":   "BMKG INDONESIA",
+						"date":  g.Tanggal + " " + g.Jam,
+					})
+				}
+			}
+		}
+
+		// Fallback jika internet STB terputus
+		if len(results) == 0 {
+			results = append(results,
+				map[string]string{
+					"title": "Massa mengawal aspirasi & situasi politik di kawasan Bundaran HI Jakarta",
+					"link":  "https://www.antaranews.com/",
+					"theme": "demo",
+					"tag":   "AKSI BUNDARAN HI",
+					"date":  "Warta Terkini",
+				},
+				map[string]string{
+					"title": "BMKG: Peringatan dini potensi cuaca ekstrem & hujan lebat di wilayah Indonesia",
+					"link":  "https://www.bmkg.go.id/cuaca/prakiraan-cuaca-indonesia.bmkg",
+					"theme": "hujan",
+					"tag":   "BMKG & CUACA",
+					"date":  "Prakiraan Cuaca",
+				},
+			)
+		}
+
+		sendJSON(w, map[string]interface{}{"success": true, "posts": results}, 200)
 		return
 	}
 

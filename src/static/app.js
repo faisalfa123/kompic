@@ -1090,7 +1090,7 @@ function initPixelCanvas() {
 }
 
 function fetchNewsTopic() {
-  fetch("https://api-berita-indonesia.vercel.app/antara/terbaru")
+  fetch("/api/news")
     .then(r => r.json())
     .then(res => {
       if (res && res.data && res.data.posts && res.data.posts.length > 0) {
@@ -1460,36 +1460,12 @@ function updateNewsDisplay() {
 }
 
 function fetchAntaraLiveNews() {
-  fetch("https://api-berita-indonesia.vercel.app/antara/terbaru")
+  fetch("/api/news")
     .then(r => r.json())
     .then(res => {
-      if (res && res.data && res.data.posts && res.data.posts.length > 0) {
-        const posts = res.data.posts.slice(0, 6);
-        posts.forEach(p => {
-          let theme = "nasional";
-          let tag = "BERITA NASIONAL";
-          const lower = p.title.toLowerCase();
-          if (lower.includes("demo") || lower.includes("aksi") || lower.includes("politik") || lower.includes("aspirasi") || lower.includes("dpr")) {
-            theme = "demo";
-            tag = "AKSI BUNDARAN HI";
-          } else if (lower.includes("hujan") || lower.includes("cuaca") || lower.includes("bmkg") || lower.includes("banjir")) {
-            theme = "hujan";
-            tag = "BMKG & CUACA";
-          } else if (lower.includes("ihsg") || lower.includes("ekonomi") || lower.includes("rupiah") || lower.includes("saham")) {
-            theme = "ekonomi";
-            tag = "PASAR & BISNIS";
-          }
-
-          newsItems.unshift({
-            title: p.title,
-            theme: theme,
-            tag: tag,
-            date: "Relevan 1 Minggu",
-            link: p.link || "https://www.antaranews.com/"
-          });
-        });
-
-        newsItems = newsItems.slice(0, 10);
+      if (res && res.success && res.posts && res.posts.length > 0) {
+        newsItems = res.posts;
+        currentNewsIdx = 0;
         updateNewsDisplay();
       }
     })
