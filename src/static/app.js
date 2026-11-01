@@ -1138,25 +1138,29 @@ let newsItems = [
     title: "Massa mengawal aspirasi & situasi politik di kawasan Bundaran HI Jakarta",
     theme: "demo",
     tag: "AKSI BUNDARAN HI",
-    date: "Isu Terkini"
+    date: "Isu Terkini",
+    link: "https://www.antaranews.com/search/bundaran-hi"
   },
   {
     title: "BMKG: Peringatan dini potensi hujan lebat & cuaca ekstrem di pegunungan",
     theme: "hujan",
     tag: "BMKG & CUACA",
-    date: "Prakiraan 1 Minggu"
+    date: "Prakiraan 1 Minggu",
+    link: "https://www.bmkg.go.id/cuaca/prakiraan-cuaca-indonesia.bmkg"
   },
   {
     title: "IHSG & Pasar Modal bergerak dinamis, investasi ekonomi digital menguat",
     theme: "ekonomi",
     tag: "PASAR & BISNIS",
-    date: "Pasar Keuangan"
+    date: "Pasar Keuangan",
+    link: "https://www.idx.co.id/"
   },
   {
     title: "Ketahanan pangan nasional & panen raya terasering sawah Nusantara diperkuat",
     theme: "nasional",
     tag: "AGRO & PANGAN",
-    date: "Ketahanan Pangan"
+    date: "Ketahanan Pangan",
+    link: "https://www.antaranews.com/top-news"
   }
 ];
 let currentNewsIdx = 0;
@@ -1433,6 +1437,10 @@ function updateNewsDisplay() {
   if (topH) topH.innerText = item.title;
   if (tagEl) tagEl.innerText = "🇮🇩 " + item.tag;
   if (dateEl) dateEl.innerText = item.date;
+  const linkEl = document.getElementById("sidePixelLink");
+  if (linkEl) {
+    linkEl.href = item.link || "https://www.antaranews.com/";
+  }
 
   if (badgeEl) {
     if (item.theme === "demo") {
@@ -1476,7 +1484,8 @@ function fetchAntaraLiveNews() {
             title: p.title,
             theme: theme,
             tag: tag,
-            date: "Relevan 1 Minggu"
+            date: "Relevan 1 Minggu",
+            link: p.link || "https://www.antaranews.com/"
           });
         });
 
