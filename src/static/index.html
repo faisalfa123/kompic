@@ -1266,6 +1266,32 @@
 
   <script src="/static/app.js"></script>
 <script>
+
+function switchFlowView(idx) {
+  try {
+    document.querySelectorAll(".flow-tab-btn").forEach(function(btn) {
+      btn.classList.remove("active");
+    });
+    document.querySelectorAll(".flow-view").forEach(function(view) {
+      view.classList.remove("active");
+      view.style.display = "none";
+    });
+
+    var activeBtn = document.getElementById("btn-flow-" + idx);
+    var activeView = document.getElementById("flow-view-" + idx);
+
+    if (activeBtn) {
+      activeBtn.classList.add("active");
+    }
+    if (activeView) {
+      activeView.classList.add("active");
+      activeView.style.display = "block";
+    }
+  } catch(e) {
+    console.error("switchFlowView error:", e);
+  }
+}
+
 function showNodeInspect(title, desc) {
   const panel = document.getElementById("process-details-content");
   if (!panel) return;
