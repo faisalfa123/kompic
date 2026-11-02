@@ -1489,6 +1489,7 @@ function toggleFullscreenWallpaper() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  initPixelCanvas();
   initSidebarPixelDiorama();
   updateWallpaperDisplay();
 });
@@ -1499,7 +1500,7 @@ document.addEventListener("DOMContentLoaded", () => {
 // =========================================================================
 async function fetchImmichStatus() {
   try {
-    const res = await fetch("/api/immich/status");
+    const res = await authedFetch("/api/immich/status");
     if (!res.ok) return;
     const data = await res.json();
     if (!data.success) return;
@@ -1590,22 +1591,80 @@ async function fetchImmichStatus() {
     if (logBox && data.logs) {
       logBox.textContent = data.logs;
     }
+
+    // Thumbnail Progress Tracker
+    const thumbBox = document.getElementById("thumbProgressBox");
+    const prog = data.thumbnail_progress;
+    if (thumbBox && prog) {
+      if (prog.active || (prog.percentage > 0 && prog.percentage < 100)) {
+        thumbBox.style.display = "block";
+        const percentText = document.getElementById("thumbPercentText");
+        const barFill = document.getElementById("thumbBarFill");
+        const statusText = document.getElementById("thumbStatusText");
+        const badgeText = document.getElementById("thumbBadgeText");
+
+        if (percentText) percentText.textContent = prog.percentage + "%";
+        if (barFill) barFill.style.width = prog.percentage + "%";
+        if (statusText) statusText.textContent = prog.status_text || "Memproses...";
+        if (badgeText) badgeText.textContent = prog.status_text || "Sedang memproses thumbnail...";
+      } else if (prog.percentage >= 100) {
+        thumbBox.style.display = "block";
+        const statusText = document.getElementById("thumbStatusText");
+        const percentText = document.getElementById("thumbPercentText");
+        const barFill = document.getElementById("thumbBarFill");
+        if (percentText) percentText.textContent = "100%";
+        if (barFill) barFill.style.width = "100%";
+        if (statusText) statusText.textContent = prog.status_text || "Selesai!";
+        setTimeout(() => {
+          if (!prog.active) thumbBox.style.display = "none";
+        }, 8000);
+      } else {
+        thumbBox.style.display = "none";
+      }
+    }
   } catch (e) {
     console.error("Error fetching Immich status:", e);
+  }
+}
+
+let thumbDisplayMode = "bar"; // "bar" or "badge"
+function toggleThumbDisplayMode() {
+  thumbDisplayMode = thumbDisplayMode === "bar" ? "badge" : "bar";
+  const barEl = document.getElementById("thumbModeBar");
+  const badgeEl = document.getElementById("thumbModeBadge");
+  const labelEl = document.getElementById("thumbModeLabel");
+
+  if (barEl && badgeEl) {
+    if (thumbDisplayMode === "bar") {
+      barEl.style.display = "block";
+      badgeEl.style.display = "none";
+      if (labelEl) labelEl.textContent = "Progress Bar";
+    } else {
+      barEl.style.display = "none";
+      badgeEl.style.display = "flex";
+      if (labelEl) labelEl.textContent = "Status Badge";
+    }
   }
 }
 
 async function sendImmichAction(actionName) {
   if (!confirm("Kirim perintah " + actionName + " ke Immich?")) return;
   try {
-    const res = await fetch("/api/immich/action", {
+    const res = await authedFetch("/api/immich/action", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: actionName })
     });
-    const d = await res.json();
+    const text = await res.text();
+    let d;
+    try {
+      d = JSON.parse(text);
+    } catch(err) {
+      alert("Respon server: " + text);
+      return;
+    }
     alert(d.message || "Perintah berhasil dikirim");
-    setTimeout(fetchImmichStatus, 2000);
+    setTimeout(fetchImmichStatus, 1500);
   } catch (e) {
     alert("Gagal mengirim aksi: " + e);
   }

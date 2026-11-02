@@ -1470,8 +1470,22 @@ tr:hover {
   height: 100vh !important;
   z-index: 0 !important;
   pointer-events: none !important;
-  opacity: 0.45 !important;
+  opacity: 0.65 !important;
   image-rendering: pixelated !important;
+}
+
+/* Biarkan kanvas pixel art terlihat tembus di dashboard */
+body {
+  background: transparent !important;
+}
+
+.dashboard-container {
+  background: rgba(11, 15, 25, 0.72) !important;
+  backdrop-filter: blur(2px) !important;
+}
+
+.main-content {
+  background: rgba(15, 23, 42, 0.65) !important;
 }
 
 /* Dynamic Pixel News Widget Banner in Header */
