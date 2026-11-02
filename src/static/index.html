@@ -80,6 +80,13 @@
         </div>
         <span class="nav-badge badge-green" id="nav-badge-sync">Idle</span>
       </div>
+      <div class="nav-item" onclick="switchTab(event,'immich')">
+        <div class="nav-item-content">
+          <span>🖼️</span>
+          <span>Immich Suite</span>
+        </div>
+        <span class="nav-badge badge-green" id="nav-badge-immich">Online</span>
+      </div>
       <div class="nav-item" onclick="switchTab(event,'help')">
         <div class="nav-item-content">
           <span>❓</span>
@@ -1210,6 +1217,109 @@
             <tr><td colspan="6" style="text-align:center;color:var(--adm-text-dim);">Memuat riwayat backup...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB: IMMICH SUITE & HEALTH MONITOR
+         ========================================================================= -->
+    <div id="pane-immich" class="tab-pane">
+      <div class="panel border-accent-blue" style="margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h3 class="h-blue" style="margin:0;">🖼️ Immich Suite &amp; Ecosystem Health</h3>
+            <p style="color:#94a3b8; font-size:0.85rem; margin:4px 0 0 0;">Monitoring realtime status server Immich, PostgreSQL, Redis, dan auto-repair reverse geocoding.</p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <a href="http://127.0.0.1:2283" target="_blank" id="btnOpenImmich" class="btn" style="background:#2563eb; color:#fff; text-decoration:none; padding:8px 14px; border-radius:6px; font-size:0.85rem; font-weight:bold; display:inline-flex; align-items:center; gap:6px;">
+              <span>🌐</span> Buka Web Immich (:2283)
+            </a>
+            <button onclick="fetchImmichStatus()" class="btn btn-secondary" style="padding:8px 14px; font-size:0.85rem;">🔄 Segarkan</button>
+          </div>
+        </div>
+
+        <!-- Service Cards Grid -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:16px;">
+          <!-- Immich Core Service -->
+          <div style="background:#0f172a; padding:14px; border-radius:8px; border:1px solid #334155;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="color:#94a3b8; font-size:0.85rem; font-weight:bold;">Immich Server</span>
+              <span id="immich-service-badge" class="nav-badge badge-green">Memeriksa...</span>
+            </div>
+            <div style="margin-top:8px;">
+              <div style="font-size:0.8rem; color:#cbd5e1;">PID: <span id="immich-pid" style="color:#38bdf8; font-family:monospace;">-</span></div>
+              <div style="font-size:0.8rem; color:#cbd5e1;">Port 2283: <span id="immich-port-status" style="color:#4ade80;">Memeriksa...</span></div>
+            </div>
+            <div style="margin-top:12px; display:flex; gap:6px;">
+              <button onclick="sendImmichAction('restart')" class="btn btn-sm btn-secondary" style="flex:1; font-size:0.75rem; padding:4px 8px;">🔄 Restart</button>
+              <button onclick="sendImmichAction('stop')" class="btn btn-sm" style="flex:1; font-size:0.75rem; padding:4px 8px; background:#ef4444; color:#fff; border:none; border-radius:4px;">⏹ Stop</button>
+            </div>
+          </div>
+
+          <!-- PostgreSQL Service -->
+          <div style="background:#0f172a; padding:14px; border-radius:8px; border:1px solid #334155;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="color:#94a3b8; font-size:0.85rem; font-weight:bold;">PostgreSQL DB</span>
+              <span id="pg-service-badge" class="nav-badge badge-green">Memeriksa...</span>
+            </div>
+            <div style="margin-top:8px;">
+              <div style="font-size:0.8rem; color:#cbd5e1;">PID: <span id="pg-pid" style="color:#38bdf8; font-family:monospace;">-</span></div>
+              <div style="font-size:0.8rem; color:#cbd5e1;">Socket: <span style="color:#94a3b8;">/run/postgresql</span></div>
+            </div>
+            <div style="margin-top:12px; font-size:0.75rem; color:#64748b;">
+              Database relasional penyimpanan metadata foto
+            </div>
+          </div>
+
+          <!-- Redis Cache -->
+          <div style="background:#0f172a; padding:14px; border-radius:8px; border:1px solid #334155;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="color:#94a3b8; font-size:0.85rem; font-weight:bold;">Redis Engine</span>
+              <span id="redis-service-badge" class="nav-badge badge-green">Memeriksa...</span>
+            </div>
+            <div style="margin-top:8px;">
+              <div style="font-size:0.8rem; color:#cbd5e1;">PID: <span id="redis-pid" style="color:#38bdf8; font-family:monospace;">-</span></div>
+              <div style="font-size:0.8rem; color:#cbd5e1;">Socket: <span style="color:#94a3b8;">/run/redis/redis-server.sock</span></div>
+            </div>
+            <div style="margin-top:12px; font-size:0.75rem; color:#64748b;">
+              Job queue &amp; antrean microservices
+            </div>
+          </div>
+
+          <!-- Reverse Geodata Health -->
+          <div style="background:#0f172a; padding:14px; border-radius:8px; border:1px solid #334155;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="color:#94a3b8; font-size:0.85rem; font-weight:bold;">Geodata Symlink</span>
+              <span id="geodata-badge" class="nav-badge badge-green">Memeriksa...</span>
+            </div>
+            <div style="margin-top:8px;">
+              <div style="font-size:0.8rem; color:#cbd5e1;">Path: <span style="color:#94a3b8;">/build/geodata/</span></div>
+              <div style="font-size:0.75rem; color:#64748b; margin-top:2px;">Mencegah bug fatal metadata startup crash</div>
+            </div>
+            <div style="margin-top:8px;">
+              <button onclick="sendImmichAction('fix_geodata')" class="btn btn-sm" style="width:100%; font-size:0.75rem; padding:4px 8px; background:#0284c7; color:#fff; border:none; border-radius:4px;">🛠️ Auto Fix Geodata Symlink</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Storage Directory Binding -->
+        <div style="margin-top:16px; background:#0f172a; padding:14px; border-radius:8px; border:1px solid #334155;">
+          <h4 style="color:#e2e8f0; font-size:0.9rem; margin:0 0 8px 0;">📁 Direktori Upload &amp; Media Storage yang Dimonitor</h4>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <code id="immich-upload-path" style="background:#1e293b; color:#38bdf8; padding:6px 12px; border-radius:6px; font-size:0.85rem; flex:1; min-width:250px;">/mnt/hdd1/immich/upload</code>
+            <span id="immich-upload-status" class="nav-badge badge-green">Terhubung</span>
+          </div>
+          <p style="color:#64748b; font-size:0.75rem; margin:6px 0 0 0;">Semua file foto &amp; video di path ini otomatis dideteksi, dikompresi tanpa crop, dan disinkronkan ke cloud backup Kompic.</p>
+        </div>
+
+        <!-- Realtime Systemd Journal Logs -->
+        <div style="margin-top:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <h4 style="color:#e2e8f0; font-size:0.9rem; margin:0;">📜 Log Eksekusi Layanan Immich (30 Baris Terakhir)</h4>
+            <span style="font-size:0.75rem; color:#64748b;">journalctl -u immich -n 30</span>
+          </div>
+          <pre id="immich-live-logs" style="background:#020617; color:#a5f3fc; padding:12px; border-radius:6px; font-size:0.75rem; font-family:monospace; height:180px; overflow-y:auto; border:1px solid #1e293b; white-space:pre-wrap; word-break:break-all;">Memuat log layanan Immich...</pre>
+        </div>
       </div>
     </div>
 

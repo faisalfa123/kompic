@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -1936,6 +1937,114 @@ func handleRoutes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// =========================================================================
+	// IMMICH MONITOR & CONTROL API
+	// =========================================================================
+	if path == "/api/immich/status" {
+		getServiceStatus := func(svcName string) (string, string) {
+			out, err := exec.Command("systemctl", "is-active", svcName).Output()
+			status := strings.TrimSpace(string(out))
+			if err != nil || status == "" {
+				status = "inactive"
+			}
+			pidOut, _ := exec.Command("systemctl", "show", "-p", "MainPID", "--value", svcName).Output()
+			pid := strings.TrimSpace(string(pidOut))
+			return status, pid
+		}
+
+		immichStatus, immichPid := getServiceStatus("immich")
+		pgStatus, pgPid := getServiceStatus("postgresql")
+		redisStatus, redisPid := getServiceStatus("redis-server")
+		if redisStatus == "inactive" {
+			redisStatus, redisPid = getServiceStatus("redis")
+		}
+
+		// Check /build/geodata symlink / dir
+		geodataValid := false
+		if fi, err := os.Stat("/build/geodata/geodata-date.txt"); err == nil && !fi.IsDir() {
+			geodataValid = true
+		}
+
+		// Check Port 2283 responsiveness
+		port2283Open := false
+		client := &http.Client{Timeout: 2 * time.Second}
+		if resp, err := client.Get("http://127.0.0.1:2283/"); err == nil {
+			_ = resp.Body.Close()
+			port2283Open = true
+		}
+
+		// Check Immich Upload Dir from Config
+		uploadDir := getCfg().Storage.ImmichUploadDir
+		uploadDirExists := false
+		if fi, err := os.Stat(uploadDir); err == nil && fi.IsDir() {
+			uploadDirExists = true
+		}
+
+		// Fetch last 30 log lines
+		logOut, _ := exec.Command("journalctl", "-u", "immich", "-n", "30", "--no-pager").Output()
+		logLines := strings.TrimSpace(string(logOut))
+
+		sendJSON(w, map[string]interface{}{
+			"success": true,
+			"services": map[string]interface{}{
+				"immich": map[string]string{
+					"status": immichStatus,
+					"pid":    immichPid,
+				},
+				"postgresql": map[string]string{
+					"status": pgStatus,
+					"pid":    pgPid,
+				},
+				"redis": map[string]string{
+					"status": redisStatus,
+					"pid":    redisPid,
+				},
+			},
+			"geodata_valid":     geodataValid,
+			"port_2283_open":    port2283Open,
+			"upload_dir":        uploadDir,
+			"upload_dir_exists": uploadDirExists,
+			"logs":              logLines,
+		}, 200)
+		return
+	}
+
+	if path == "/api/immich/action" && r.Method == "POST" {
+		var req struct {
+			Action string `json:"action"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			sendJSON(w, map[string]interface{}{"success": false, "error": "Invalid payload"}, 400)
+			return
+		}
+
+		switch req.Action {
+		case "restart":
+			_ = exec.Command("systemctl", "restart", "immich").Run()
+			sendJSON(w, map[string]interface{}{"success": true, "message": "Perintah restart Immich dikirim"}, 200)
+			return
+		case "start":
+			_ = exec.Command("systemctl", "start", "immich").Run()
+			sendJSON(w, map[string]interface{}{"success": true, "message": "Perintah start Immich dikirim"}, 200)
+			return
+		case "stop":
+			_ = exec.Command("systemctl", "stop", "immich").Run()
+			sendJSON(w, map[string]interface{}{"success": true, "message": "Perintah stop Immich dikirim"}, 200)
+			return
+		case "fix_geodata":
+			_ = os.MkdirAll("/build", 0755)
+			_ = exec.Command("ln", "-sfn", "/opt/immich/geodata", "/build/geodata").Run()
+			_ = exec.Command("chown", "-R", "immich:immich", "/build").Run()
+			_ = exec.Command("chmod", "755", "/build").Run()
+			_ = exec.Command("systemctl", "restart", "immich").Run()
+			sendJSON(w, map[string]interface{}{"success": true, "message": "Symlink /build/geodata berhasil dibuat & Immich direstart"}, 200)
+			return
+		default:
+			sendJSON(w, map[string]interface{}{"success": false, "error": "Unknown action"}, 400)
+			return
+		}
+	}
+
 	// Auth Check
 	if path == "/api/auth/status" {
 		sendJSON(w, map[string]interface{}{
@@ -2288,6 +2397,13 @@ func handleRoutes(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	// Check for --wizard flag
+	for _, arg := range os.Args[1:] {
+		if arg == "--wizard" || arg == "-w" {
+			runTUIWizard()
+			return
+		}
+	}
 	// 1. Baca Konfigurasi
 	var initialCfg Config
 	cfgData, err := os.ReadFile("config.json")
@@ -2329,3 +2445,98 @@ func main() {
 	}
 }
 
+
+
+// =========================================================================
+// INTERACTIVE TUI WIZARD INSTALLER & CONFIGURATOR
+// =========================================================================
+func runTUIWizard() {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("==================================================================")
+	fmt.Println("       KOMPIC & IMMICH SUITE - TUI WIZARD INSTALLER              ")
+	fmt.Println("==================================================================")
+	fmt.Println("Selamat datang di wizard konfigurasi media Immich & Kompic!")
+	fmt.Println()
+
+	// 1. Deteksi Immich
+	fmt.Println("[1/4] Memeriksa Instalasi Immich...")
+	immichInstalled := false
+	if _, err := os.Stat("/opt/immich"); err == nil {
+		immichInstalled = true
+		fmt.Println("  [OK] Direktori /opt/immich ditemukan.")
+	} else if _, err := os.Stat("/etc/systemd/system/immich.service"); err == nil {
+		immichInstalled = true
+		fmt.Println("  [OK] Layanan systemd immich.service ditemukan.")
+	}
+
+	if !immichInstalled {
+		fmt.Println("  [!] Immich belum terpasang di sistem ini.")
+		fmt.Print("  Apakah Anda ingin menginstal Immich sekarang? (y/n) [default: y]: ")
+		ans, _ := reader.ReadString('\n')
+		ans = strings.ToLower(strings.TrimSpace(ans))
+		if ans == "" || ans == "y" || ans == "ya" {
+			fmt.Println("  -> Menjalankan installer otomatis...")
+			if _, err := os.Stat("/boot/dietpi"); err == nil {
+				fmt.Println("  -> Sistem DietPi terdeteksi! Memasang Immich Native via dietpi-software...")
+				cmd := exec.Command("dietpi-software", "install", "202")
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+				_ = cmd.Run()
+			} else {
+				fmt.Println("  -> Distro Linux umum terdeteksi. Silakan pasang via Docker Compose resmi Immich.")
+			}
+		}
+	} else {
+		fmt.Println("  [V] Immich sudah terpasang di server.")
+	}
+
+	// 2. Folder Foto & Media
+	fmt.Println()
+	fmt.Println("[2/4] Lokasi Folder Penyimpanan Foto/Media Immich")
+	defaultUpload := "/mnt/hdd1/immich/upload"
+	if _, err := os.Stat(defaultUpload); err != nil {
+		defaultUpload = "/mnt/dietpi_userdata/immich/upload"
+	}
+	fmt.Printf("  Masukkan path folder upload Immich [default: %s]: ", defaultUpload)
+	chosenDir, _ := reader.ReadString('\n')
+	chosenDir = strings.TrimSpace(chosenDir)
+	if chosenDir == "" {
+		chosenDir = defaultUpload
+	}
+	_ = os.MkdirAll(chosenDir, 0775)
+	fmt.Printf("  [OK] Lokasi media disimpan: %s\n", chosenDir)
+
+	// 3. Pengecekan & Perbaikan Geodata (/build/geodata)
+	fmt.Println()
+	fmt.Println("[3/4] Validasi Reverse Geocoding Database (/build/geodata)...")
+	if fi, err := os.Stat("/build/geodata/geodata-date.txt"); err == nil && !fi.IsDir() {
+		fmt.Println("  [OK] Symlink /build/geodata valid dan aktif.")
+	} else {
+		fmt.Println("  [!] Memperbaiki symlink /build/geodata -> /opt/immich/geodata...")
+		_ = os.MkdirAll("/build", 0755)
+		_ = exec.Command("ln", "-sfn", "/opt/immich/geodata", "/build/geodata").Run()
+		_ = exec.Command("chown", "-R", "immich:immich", "/build").Run()
+		_ = exec.Command("chmod", "755", "/build").Run()
+		fmt.Println("  [OK] Symlink geodata berhasil diperbaiki!")
+	}
+
+	// 4. Update config.json Kompic
+	fmt.Println()
+	fmt.Println("[4/4] Menyimpan Konfigurasi Kompic (config.json)...")
+	cfg := getDefaultConfig()
+	if cfgData, err := os.ReadFile("config.json"); err == nil {
+		_ = json.Unmarshal(cfgData, &cfg)
+	}
+	cfg.Storage.ImmichUploadDir = chosenDir
+	if err := saveConfigFile(cfg); err == nil {
+		fmt.Println("  [OK] config.json berhasil diperbarui.")
+	} else {
+		fmt.Printf("  [!] Gagal menyimpan config.json: %v\n", err)
+	}
+
+	fmt.Println()
+	fmt.Println("==================================================================")
+	fmt.Println("           SETUP WIZARD IMMICH & KOMPIC SELESAI!                  ")
+	fmt.Println("==================================================================")
+	fmt.Println("Jalankan service: systemctl restart immich immich-optimizer")
+}

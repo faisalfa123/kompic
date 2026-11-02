@@ -87,6 +87,8 @@ function switchTab(evt, tabId) {
     loadLog(document.getElementById("log-selector").value);
   } else if (tabId === "settings") {
     loadConfig();
+  } else if (tabId === "immich") {
+    fetchImmichStatus();
   } else {
     refreshData();
   }
@@ -1477,3 +1479,129 @@ function fetchAntaraLiveNews() {
 document.addEventListener("DOMContentLoaded", () => {
   initSidebarPixelDiorama();
 });
+
+
+// =========================================================================
+// IMMICH SUITE & HEALTH MONITOR FRONTEND LOGIC
+// =========================================================================
+async function fetchImmichStatus() {
+  try {
+    const res = await fetch("/api/immich/status");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.success) return;
+
+    // Update Immich Core
+    const immichStatus = (data.services.immich.status || "").toLowerCase();
+    const immichBadge = document.getElementById("immich-service-badge");
+    const navBadge = document.getElementById("nav-badge-immich");
+    if (immichBadge) {
+      if (immichStatus === "active") {
+        immichBadge.textContent = "Active";
+        immichBadge.className = "nav-badge badge-green";
+        if (navBadge) { navBadge.textContent = "Online"; navBadge.className = "nav-badge badge-green"; }
+      } else {
+        immichBadge.textContent = immichStatus || "Failed";
+        immichBadge.className = "nav-badge badge-red";
+        if (navBadge) { navBadge.textContent = "Offline"; navBadge.className = "nav-badge badge-red"; }
+      }
+    }
+    const immichPid = document.getElementById("immich-pid");
+    if (immichPid) immichPid.textContent = data.services.immich.pid || "-";
+
+    const portStatus = document.getElementById("immich-port-status");
+    if (portStatus) {
+      if (data.port_2283_open) {
+        portStatus.textContent = "Online (200 OK)";
+        portStatus.style.color = "#4ade80";
+      } else {
+        portStatus.textContent = "Tertutup / Belum Siap";
+        portStatus.style.color = "#ef4444";
+      }
+    }
+
+    // Dynamic Host link for "Buka Web Immich"
+    const btnOpen = document.getElementById("btnOpenImmich");
+    if (btnOpen) {
+      btnOpen.href = "http://" + window.location.hostname + ":2283";
+    }
+
+    // PostgreSQL
+    const pgStatus = (data.services.postgresql.status || "").toLowerCase();
+    const pgBadge = document.getElementById("pg-service-badge");
+    if (pgBadge) {
+      pgBadge.textContent = pgStatus === "active" ? "Active" : (pgStatus || "Inactive");
+      pgBadge.className = pgStatus === "active" ? "nav-badge badge-green" : "nav-badge badge-red";
+    }
+    const pgPid = document.getElementById("pg-pid");
+    if (pgPid) pgPid.textContent = data.services.postgresql.pid || "-";
+
+    // Redis
+    const redisStatus = (data.services.redis.status || "").toLowerCase();
+    const redisBadge = document.getElementById("redis-service-badge");
+    if (redisBadge) {
+      redisBadge.textContent = redisStatus === "active" ? "Active" : (redisStatus || "Inactive");
+      redisBadge.className = redisStatus === "active" ? "nav-badge badge-green" : "nav-badge badge-red";
+    }
+    const redisPid = document.getElementById("redis-pid");
+    if (redisPid) redisPid.textContent = data.services.redis.pid || "-";
+
+    // Geodata
+    const geoBadge = document.getElementById("geodata-badge");
+    if (geoBadge) {
+      if (data.geodata_valid) {
+        geoBadge.textContent = "Valid (OK)";
+        geoBadge.className = "nav-badge badge-green";
+      } else {
+        geoBadge.textContent = "Missing (Perlu Fix)";
+        geoBadge.className = "nav-badge badge-red";
+      }
+    }
+
+    // Storage Path
+    const uploadPath = document.getElementById("immich-upload-path");
+    if (uploadPath) uploadPath.textContent = data.upload_dir || "-";
+    const uploadStatus = document.getElementById("immich-upload-status");
+    if (uploadStatus) {
+      if (data.upload_dir_exists) {
+        uploadStatus.textContent = "Folder Ditemukan";
+        uploadStatus.className = "nav-badge badge-green";
+      } else {
+        uploadStatus.textContent = "Folder Tidak Ditemukan";
+        uploadStatus.className = "nav-badge badge-red";
+      }
+    }
+
+    // Live Logs
+    const logBox = document.getElementById("immich-live-logs");
+    if (logBox && data.logs) {
+      logBox.textContent = data.logs;
+    }
+  } catch (e) {
+    console.error("Error fetching Immich status:", e);
+  }
+}
+
+async function sendImmichAction(actionName) {
+  if (!confirm("Kirim perintah " + actionName + " ke Immich?")) return;
+  try {
+    const res = await fetch("/api/immich/action", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: actionName })
+    });
+    const d = await res.json();
+    alert(d.message || "Perintah berhasil dikirim");
+    setTimeout(fetchImmichStatus, 2000);
+  } catch (e) {
+    alert("Gagal mengirim aksi: " + e);
+  }
+}
+
+// Inisialisasi interval berkala
+setInterval(() => {
+  const pane = document.getElementById("pane-immich");
+  if (pane && pane.classList.contains("active")) {
+    fetchImmichStatus();
+  }
+}, 5000);
