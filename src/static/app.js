@@ -1188,7 +1188,7 @@ function initSidebarPixelDiorama() {
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
-  fetchAntaraLiveNews();
+  updateWallpaperDisplay();
 
   function render() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1418,66 +1418,79 @@ function initSidebarPixelDiorama() {
   render();
 }
 
-function nextNewsTopic() {
-  currentNewsIdx = (currentNewsIdx + 1) % newsItems.length;
-  updateNewsDisplay();
+const pixelWallpapers = [
+  {
+    theme: "demo",
+    tag: "JAKARTA",
+    badge: "BUNDARAN HI",
+    title: "Monumen Selamat Datang, Air Mancur & Siluet Kota Jakarta",
+    badgeColor: "#ef4444"
+  },
+  {
+    theme: "hujan",
+    tag: "ALAM NUSANTARA",
+    badge: "HUJAN & PETIR",
+    title: "Lembah Pegunungan, Hujan Tropis & Kilatan Halilintar",
+    badgeColor: "#0284c7"
+  },
+  {
+    theme: "ekonomi",
+    tag: "FINANSIAL",
+    badge: "PASAR & IHSG",
+    title: "Matrix Cyberpunk Candlestick Saham & Fluktuasi Pasar Modal",
+    badgeColor: "#00d284"
+  },
+  {
+    theme: "nasional",
+    tag: "AGRARIS",
+    badge: "SAWAH HIJAU",
+    title: "Pematang Sawah Terasering & Pondok Petani Fajar Indonesia",
+    badgeColor: "#8b5cf6"
+  }
+];
+let currentWallpaperIdx = 0;
+let fullWallpaperEnabled = true;
+
+function nextPixelWallpaper() {
+  currentWallpaperIdx = (currentWallpaperIdx + 1) % pixelWallpapers.length;
+  updateWallpaperDisplay();
 }
 
-function updateNewsDisplay() {
-  const item = newsItems[currentNewsIdx];
+function updateWallpaperDisplay() {
+  const item = pixelWallpapers[currentWallpaperIdx];
   if (!item) return;
 
   currentTheme = item.theme;
+  pixelTheme = item.theme;
 
   const headlineEl = document.getElementById("sidePixelHeadline");
   const badgeEl = document.getElementById("sidePixelBadge");
   const tagEl = document.getElementById("sidePixelTag");
-  const dateEl = document.getElementById("sidePixelDate");
-  const topH = document.getElementById("tickerHeadline");
 
   if (headlineEl) headlineEl.innerText = item.title;
-  if (topH) topH.innerText = item.title;
-  if (tagEl) tagEl.innerText = "🇮🇩 " + item.tag;
-  if (dateEl) dateEl.innerText = item.date;
-  const linkEl = document.getElementById("sidePixelLink");
-  if (linkEl) {
-    linkEl.href = item.link || "https://www.antaranews.com/";
-  }
-
+  if (tagEl) tagEl.innerText = "🎨 " + item.tag;
   if (badgeEl) {
-    if (item.theme === "demo") {
-      badgeEl.innerText = "AKSI HI";
-      badgeEl.style.background = "#ef4444";
-    } else if (item.theme === "hujan") {
-      badgeEl.innerText = "CUACA";
-      badgeEl.style.background = "#0284c7";
-    } else if (item.theme === "ekonomi") {
-      badgeEl.innerText = "IHSG";
-      badgeEl.style.background = "#00d284";
-    } else {
-      badgeEl.innerText = "NASIONAL";
-      badgeEl.style.background = "#8b5cf6";
-    }
+    badgeEl.innerText = item.badge;
+    badgeEl.style.background = item.badgeColor;
   }
 }
 
-function fetchAntaraLiveNews() {
-  fetch("/api/news")
-    .then(r => r.json())
-    .then(res => {
-      if (res && res.success && res.posts && res.posts.length > 0) {
-        newsItems = res.posts;
-        currentNewsIdx = 0;
-        updateNewsDisplay();
-      }
-    })
-    .catch(() => {
-      updateNewsDisplay();
-    });
+function toggleFullscreenWallpaper() {
+  fullWallpaperEnabled = !fullWallpaperEnabled;
+  const canvas = document.getElementById("pixelBackgroundCanvas");
+  const statusEl = document.getElementById("fullWallStatus");
+  if (canvas) {
+    canvas.style.display = fullWallpaperEnabled ? "block" : "none";
+  }
+  if (statusEl) {
+    statusEl.innerText = fullWallpaperEnabled ? "ON" : "OFF";
+    statusEl.style.color = fullWallpaperEnabled ? "#4ade80" : "#ef4444";
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   initSidebarPixelDiorama();
+  updateWallpaperDisplay();
 });
 
 

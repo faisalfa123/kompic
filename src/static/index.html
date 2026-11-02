@@ -95,24 +95,24 @@
       </div>
     </div>
 
-        <!-- Integrated Multi-Layer Pixel Art Diorama (Berita Indonesia Terkini) -->
-    <div class="sidebar-pixel-container" id="sidebarPixelWidget" onclick="nextNewsTopic()" title="Klik untuk beralih ke berita terkini lainnya">
+    <!-- Active Pixel Art Wallpaper Widget (Interaktif & Multi-Lanskap) -->
+    <div class="sidebar-pixel-container" id="sidebarPixelWidget" onclick="nextPixelWallpaper()" title="Klik untuk berganti tema Wallpaper Pixel Art">
       <div class="sidebar-pixel-header">
-        <span class="sidebar-pixel-title" id="sidePixelTag">🇮🇩 BERITA AKTIF</span>
-        <span class="sidebar-pixel-badge" id="sidePixelBadge">AKSI HI</span>
+        <span class="sidebar-pixel-title" id="sidePixelTag">🎨 PIXEL WALLPAPER</span>
+        <span class="sidebar-pixel-badge" id="sidePixelBadge">BUNDARAN HI</span>
       </div>
       <div class="sidebar-pixel-screen">
         <canvas id="sidebarPixelCanvas" width="226" height="125"></canvas>
       </div>
       <div class="sidebar-pixel-caption">
         <div class="pixel-caption-headline" id="sidePixelHeadline">
-          Massa mengawal aspirasi di kawasan Bundaran HI Jakarta
+          Selamat Datang &amp; Air Mancur Bundaran HI
         </div>
         <div class="pixel-caption-meta" style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
-          <a id="sidePixelLink" href="https://www.antaranews.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" class="pixel-source-btn" style="background:#1e293b; color:#38bdf8; text-decoration:none; padding:2px 8px; border-radius:4px; font-size:0.65rem; font-weight:700; border:1px solid #334155; display:inline-flex; align-items:center; gap:4px;">
-            🔗 Buka Sumber Asli
-          </a>
-          <span class="pixel-click-hint" style="font-size:0.65rem; color:#94a3b8; cursor:pointer;">Klik ganti ➔</span>
+          <button id="btnToggleFullWallpaper" onclick="event.stopPropagation(); toggleFullscreenWallpaper();" class="pixel-source-btn" style="background:#1e293b; color:#38bdf8; cursor:pointer; padding:3px 8px; border-radius:4px; font-size:0.65rem; font-weight:700; border:1px solid #334155; display:inline-flex; align-items:center; gap:4px;">
+            🖥️ Full Wallpaper: <span id="fullWallStatus">ON</span>
+          </button>
+          <span class="pixel-click-hint" style="font-size:0.65rem; color:#94a3b8; cursor:pointer;">Ganti Tema ➔</span>
         </div>
       </div>
     </div>

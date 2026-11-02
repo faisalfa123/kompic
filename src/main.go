@@ -1158,8 +1158,19 @@ func processFile(p *ProcessedFile) {
 	p.CompSize = compSize
 	p.ProcessedTime = time.Now().Format("2006-01-02 15:04:05")
 
-	// Atomic Replace vs Skip Boros
-	if compSize < p.OrigSize {
+	savedBytes := p.OrigSize - compSize
+	ratio := 0.0
+	if p.OrigSize > 0 {
+		ratio = (float64(savedBytes) / float64(p.OrigSize)) * 100.0
+	}
+
+	// ATURAN BARU (EFISIENSI KOMPRESI):
+	// Jika berkas terkompresi lebih kecil dari asli, TETAPI penghematannya kurang dari 10%
+	// DAN selisih pengurangannya kurang dari 750 KB (750 * 1024 bytes), maka SKIP dan gunakan file original!
+	isMarginalGain := (ratio < 10.0) && (savedBytes < 750*1024)
+
+	// Atomic Replace vs Skip Boros / Marginal
+	if compSize < p.OrigSize && !isMarginalGain {
 		// Node: replace
 		store.mu.Lock()
 		store.ActiveNode = "replace"
@@ -1182,8 +1193,8 @@ func processFile(p *ProcessedFile) {
 			writeLog("supervisor", fmt.Sprintf("Gagal replace %s: %v", p.FileName, err))
 		} else {
 			p.Status = "SUCCESS"
-			p.SavedBytes = p.OrigSize - compSize
-			p.Ratio = (float64(p.SavedBytes) / float64(p.OrigSize)) * 100.0
+			p.SavedBytes = savedBytes
+			p.Ratio = ratio
 
 			if p.Ratio >= 88 {
 				p.Category = "IRIT"
@@ -1195,14 +1206,13 @@ func processFile(p *ProcessedFile) {
 				p.Category = "EFISIEN"
 			}
 
-			writeLog("supervisor", fmt.Sprintf("[SUCCESS] %s: %.2fMB -> %.2fMB (Hemat %.1f%%) | Metadata: %s (%v)", p.FileName, float64(p.OrigSize)/(1024*1024), float64(compSize)/(1024*1024), p.Ratio, metaStatus, safeTags))
+			writeLog("supervisor", fmt.Sprintf("[SUCCESS] %s: %.2fMB -> %.2fMB (Hemat %.1f%% / %d KB) | Metadata: %s (%v)", p.FileName, float64(p.OrigSize)/(1024*1024), float64(compSize)/(1024*1024), p.Ratio, savedBytes/1024, metaStatus, safeTags))
 		}
 	} else {
 		// Node: skip
 		store.mu.Lock()
 		store.ActiveNode = "skip"
 		store.mu.Unlock()
-		updateJobStep(p.FilePath, "Skip (Boros - Berkas Asli Dipertahankan)")
 
 		_ = os.Remove(tmpDst)
 		p.Status = "SKIPPED"
@@ -1210,10 +1220,18 @@ func processFile(p *ProcessedFile) {
 		p.SavedBytes = 0
 		p.Ratio = 0
 		p.Category = "BOROS"
-		p.ErrorMsg = "Ukuran hasil kompresi lebih besar dari asli"
 		p.MetadataStatus = "SAFE"
 		p.SafeTags = []string{"Berkas Asli Dipertahankan (100% Utuh)"}
-		writeLog("supervisor", fmt.Sprintf("[SKIPPED] %s: Hasil lebih besar (asli %d <= hasil %d). Berkas asli utuh.", p.FileName, p.OrigSize, compSize))
+
+		if compSize >= p.OrigSize {
+			updateJobStep(p.FilePath, "Skip (Boros - Berkas Asli Dipertahankan)")
+			p.ErrorMsg = "Ukuran hasil kompresi lebih besar dari asli"
+			writeLog("supervisor", fmt.Sprintf("[SKIPPED BOROS] %s: Hasil lebih besar (asli %d <= hasil %d). Berkas asli utuh.", p.FileName, p.OrigSize, compSize))
+		} else {
+			updateJobStep(p.FilePath, "Skip (Pengurangan <10% & <750KB - Berkas Asli Dipertahankan)")
+			p.ErrorMsg = fmt.Sprintf("Penghematan marjinal (hanya %.1f%% / %d KB < 750KB). Berkas asli dipertahankan.", ratio, savedBytes/1024)
+			writeLog("supervisor", fmt.Sprintf("[SKIPPED MARGINAL] %s: Penghematan hanya %.1f%% (%d KB < 750KB). Berkas asli dipertahankan.", p.FileName, ratio, savedBytes/1024))
+		}
 	}
 
 	store.addOrUpdate(p)
