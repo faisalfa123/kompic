@@ -4,6 +4,19 @@ Semua riwayat perubahan, penambahan fitur, peningkatan performa, dan perbaikan b
 
 ---
 
+## [v1.3.1] - 2026-11-03
+
+### 🐛 Perbaikan Bug Kritis (Critical Fixes)
+1. **Solusi Permanen Masalah Foto Retak / Rusak di Immich UI (`Terjadi kesalahan saat memuat gambar`)**:
+   - Menambahkan penegakan hak akses `chown immich:immich` dan `chmod 664` secara otomatis pada file media setelah proses kompresi atomik (`atomicReplace`). File tidak lagi menjadi milik `root:root` sehingga daemon Immich tidak lagi mengalami penolakan akses (*EACCES Permission denied*).
+   - Menyediakan script pemulihan izin akses massal untuk file foto yang sebelumnya terlanjur berstatus izin root.
+
+2. **Perbaikan Tuntas Error Notifikasi Tombol Aksi Immich (`SyntaxError: Unexpected non-whitespace character after JSON`)**:
+   - Mengubah mekanisme parsing respon di `sendImmichAction` dari parsing JSON mentah langsung menjadi pembacaan stream teks aman dengan *try-catch block*.
+   - Memperbaiki penanganan `POST /api/immich/action` di Go server dengan `io.ReadAll` dan unmarshal payload JSON yang lebih toleran.
+
+---
+
 ## [v1.3.0] - 2026-11-02
 
 ### ✨ Fitur Baru & Peningkatan Besar

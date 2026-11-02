@@ -1676,13 +1676,27 @@ function toggleThumbDisplayMode() {
 async function sendImmichAction(actionName) {
   if (!confirm("Kirim perintah " + actionName + " ke Immich?")) return;
   try {
-    const d = await authedFetch("/api/immich/action", {
+    const res = await fetch("/api/immich/action", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + authToken
+      },
       body: JSON.stringify({ action: actionName })
     });
-    alert(d.message || "Perintah berhasil dikirim");
-    setTimeout(fetchImmichStatus, 1000);
+    const text = await res.text();
+    let d = {};
+    try {
+      d = JSON.parse(text);
+    } catch (parseErr) {
+      console.warn("Raw action response:", text);
+    }
+    if (d.message) {
+      alert(d.message);
+    } else {
+      alert("Aksi " + actionName + " berhasil dieksekusi!");
+    }
+    setTimeout(fetchImmichStatus, 1500);
   } catch (e) {
     alert("Gagal mengirim aksi: " + e);
   }

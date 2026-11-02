@@ -1194,6 +1194,10 @@ func processFile(p *ProcessedFile) {
 		_ = os.Chmod(tmpDst, origStat.Mode())
 		_ = os.Chtimes(tmpDst, origStat.ModTime(), origStat.ModTime())
 
+		// Pastikan kepemilikan user immich:immich tetap terjaga (supaya tidak broken/retak di Immich)
+		_ = exec.Command("chown", "immich:immich", tmpDst).Run()
+		_ = exec.Command("chmod", "664", tmpDst).Run()
+
 		// Evaluasi Integritas Metadata Lengkap (GPS, Waktu, Device, Live Photo, ICC)
 		metaStatus, safeTags, lostTags := verifyDetailedMetadata(p.FilePath, tmpDst)
 		p.MetadataStatus = metaStatus
@@ -1205,6 +1209,10 @@ func processFile(p *ProcessedFile) {
 			p.ErrorMsg = "Gagal mengganti berkas: " + err.Error()
 			writeLog("supervisor", fmt.Sprintf("Gagal replace %s: %v", p.FileName, err))
 		} else {
+			// Pastikan kepemilikan file setelah replace tetap milik user immich
+			_ = exec.Command("chown", "immich:immich", p.FilePath).Run()
+			_ = exec.Command("chmod", "664", p.FilePath).Run()
+
 			p.Status = "SUCCESS"
 			p.SavedBytes = savedBytes
 			p.Ratio = ratio
@@ -2046,11 +2054,12 @@ func handleRoutes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if path == "/api/immich/action" && r.Method == "POST" {
+		bodyBytes, _ := io.ReadAll(r.Body)
 		var req struct {
 			Action string `json:"action"`
 		}
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			sendJSON(w, map[string]interface{}{"success": false, "error": "Invalid payload"}, 400)
+		if err := json.Unmarshal(bodyBytes, &req); err != nil {
+			sendJSON(w, map[string]interface{}{"success": false, "error": "Invalid payload: " + err.Error()}, 400)
 			return
 		}
 
