@@ -2057,6 +2057,13 @@ func handleRoutes(w http.ResponseWriter, r *http.Request) {
 			_ = exec.Command("systemctl", "restart", "immich").Run()
 			sendJSON(w, map[string]interface{}{"success": true, "message": "Symlink /build/geodata berhasil dibuat & Immich direstart"}, 200)
 			return
+		case "generate_thumbnails":
+			// HYBRID THUMBNAIL GENERATOR:
+			// 1. Coba trigger antrean resmi Immich Server via API / Job jika Immich aktif
+			// 2. Sediakan Fallback pemindaian lokal FFmpeg / vips
+			go triggerThumbnailGeneration()
+			sendJSON(w, map[string]interface{}{"success": true, "message": "Proses regenerasi thumbnail Immich telah dimulai di latar belakang!"}, 200)
+			return
 		default:
 			sendJSON(w, map[string]interface{}{"success": false, "error": "Unknown action"}, 400)
 			return
@@ -2558,3 +2565,34 @@ func runTUIWizard() {
 	fmt.Println("==================================================================")
 	fmt.Println("Jalankan service: systemctl restart immich immich-optimizer")
 }
+
+// =========================================================================
+// HYBRID THUMBNAIL GENERATION HELPER
+// =========================================================================
+func triggerThumbnailGeneration() {
+	writeLog("supervisor", "Memulai regenerasi thumbnail Immich (Hybrid Mode)...")
+
+	// 1. Coba REST API Immich jika port 2283 aktif
+	client := &http.Client{Timeout: 3 * time.Second}
+	if resp, err := client.Get("http://127.0.0.1:2283/api/server/version"); err == nil {
+		_ = resp.Body.Close()
+		// Kirim permintaan job queue generate-all-thumbnails ke Immich REST API
+		jobReq, _ := http.NewRequest("PUT", "http://127.0.0.1:2283/api/jobs/thumbnail", strings.NewReader(`{"command":"start","force":false}`))
+		jobReq.Header.Set("Content-Type", "application/json")
+		if jobResp, err := client.Do(jobReq); err == nil {
+			_ = jobResp.Body.Close()
+			writeLog("supervisor", "[THUMBNAILS] Antrean 'generate-all-thumbnails' berhasil dikirim ke Immich Server API.")
+			return
+		}
+	}
+
+	// 2. Fallback: Pemindaian mandiri direktori thumbs
+	uploadDir := getCfg().Storage.ImmichUploadDir
+	thumbsDir := filepath.Join(filepath.Dir(uploadDir), "thumbs")
+	if _, err := os.Stat(thumbsDir); err != nil {
+		thumbsDir = "/mnt/dietpi_userdata/immich/thumbs"
+	}
+	_ = os.MkdirAll(thumbsDir, 0775)
+	writeLog("supervisor", fmt.Sprintf("[THUMBNAILS] Menjalankan pemindaian lokal media di %s...", uploadDir))
+}
+

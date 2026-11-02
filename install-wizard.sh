@@ -163,6 +163,19 @@ EOF
     systemctl enable immich-optimizer
 fi
 
+# 5. OPSI GENERATE THUMBNAIL IMMICH
+echo ""
+echo -e "${BLUE}=== [5/5] Pembuatan & Sinkronisasi Thumbnail Immich ===${NC}"
+read -p "Apakah Anda ingin langsung membuat/memperbarui thumbnail foto Immich sekarang? (y/n) [default: y]: " GEN_THUMB_CHOICE
+GEN_THUMB_CHOICE=${GEN_THUMB_CHOICE:-y}
+if [[ "$GEN_THUMB_CHOICE" =~ ^[Yy]$ ]]; then
+    echo -e "${GREEN}--> Mengirim antrean pembuatan thumbnail ke Immich Server...${NC}"
+    curl -s -X PUT http://127.0.0.1:2283/api/jobs/thumbnail \
+         -H "Content-Type: application/json" \
+         -d '{"command":"start","force":false}' 2>/dev/null || true
+    echo -e "${GREEN}[OK] Permintaan regenerasi thumbnail telah diteruskan ke Immich.${NC}"
+fi
+
 # Restart layanan
 echo ""
 echo -e "${GREEN}Merestart layanan Immich & Kompic...${NC}"

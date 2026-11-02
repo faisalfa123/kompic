@@ -1230,7 +1230,10 @@
             <h3 class="h-blue" style="margin:0;">🖼️ Immich Suite &amp; Ecosystem Health</h3>
             <p style="color:#94a3b8; font-size:0.85rem; margin:4px 0 0 0;">Monitoring realtime status server Immich, PostgreSQL, Redis, dan auto-repair reverse geocoding.</p>
           </div>
-          <div style="display:flex; gap:8px;">
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button onclick="sendImmichAction('generate_thumbnails')" class="btn" style="background:#059669; color:#fff; padding:8px 14px; border-radius:6px; font-size:0.85rem; font-weight:bold; display:inline-flex; align-items:center; gap:6px; border:none; cursor:pointer;">
+              <span>🖼️</span> Generate Thumbnails
+            </button>
             <a href="http://127.0.0.1:2283" target="_blank" id="btnOpenImmich" class="btn" style="background:#2563eb; color:#fff; text-decoration:none; padding:8px 14px; border-radius:6px; font-size:0.85rem; font-weight:bold; display:inline-flex; align-items:center; gap:6px;">
               <span>🌐</span> Buka Web Immich (:2283)
             </a>
