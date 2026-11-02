@@ -969,461 +969,13 @@ document.addEventListener("DOMContentLoaded", () => {
   checkAuth();
 });
 
-// --- Dynamic Pixel Art Sky & Horizon Full-Screen Animation ---
-let pixelTheme = "demo"; // "demo", "hujan", "cerah", "nasional"
-let pixelClouds = [
-  { x: 50, y: 30, w: 90, speed: 0.4 },
-  { x: 380, y: 60, w: 120, speed: 0.25 },
-  { x: 780, y: 25, w: 100, speed: 0.35 },
-  { x: 1150, y: 70, w: 110, speed: 0.3 }
-];
-let raindrops = [];
-for (let i = 0; i < 70; i++) {
-  raindrops.push({ x: Math.random() * 2000, y: Math.random() * 800, speed: 5 + Math.random() * 4 });
-}
-
-function initPixelCanvas() {
-  const canvas = document.getElementById("pixelBackgroundCanvas") || document.getElementById("pixelCanvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resizeCanvas();
-  window.addEventListener("resize", resizeCanvas);
-
-  fetchNewsTopic();
-  setInterval(fetchNewsTopic, 60000); // Perbarui berita tiap 1 menit
-
-  function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // 1. Sky Gradient Atmosfer Malam
-    let skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    if (pixelTheme === "hujan") {
-      skyGradient.addColorStop(0, "#090d16");
-      skyGradient.addColorStop(0.5, "#111827");
-      skyGradient.addColorStop(1, "#1f2937");
-    } else if (pixelTheme === "demo") {
-      skyGradient.addColorStop(0, "#0b0c1b");
-      skyGradient.addColorStop(0.4, "#1e1b4b");
-      skyGradient.addColorStop(1, "#312e81");
-    } else {
-      skyGradient.addColorStop(0, "#080b14");
-      skyGradient.addColorStop(0.5, "#0f172a");
-      skyGradient.addColorStop(1, "#1e293b");
-    }
-    ctx.fillStyle = skyGradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // 2. Pixel Skyline Gedung Kota & Monas
-    const groundY = canvas.height - 40;
-    ctx.fillStyle = "#050811";
-    // Siluet deretan gedung pencakar langit Jakarta
-    for (let x = 0; x < canvas.width; x += 110) {
-      const h = 80 + ((x * 13) % 140);
-      ctx.fillRect(x, groundY - h, 75, h);
-      // Jendela-jendela pixel gedung menyala kuning
-      ctx.fillStyle = "rgba(251, 191, 36, 0.4)";
-      ctx.fillRect(x + 12, groundY - h + 15, 6, 8);
-      ctx.fillRect(x + 28, groundY - h + 15, 6, 8);
-      ctx.fillRect(x + 12, groundY - h + 35, 6, 8);
-      ctx.fillRect(x + 28, groundY - h + 35, 6, 8);
-      ctx.fillStyle = "#050811";
-    }
-
-    // Tugu Monas di tengah layar
-    const monasX = Math.floor(canvas.width / 2) - 40;
-    ctx.fillStyle = "#050811";
-    ctx.fillRect(monasX, groundY - 100, 80, 50);   // Cawan Monas
-    ctx.fillRect(monasX + 30, groundY - 220, 20, 120); // Tugu Monas
-    // Lidah Api Emas Monas
-    ctx.fillStyle = "#f59e0b";
-    ctx.fillRect(monasX + 32, groundY - 245, 16, 25);
-    ctx.fillStyle = "#fbbf24";
-    ctx.fillRect(monasX + 36, groundY - 240, 8, 15);
-
-    // 3. Pixel Clouds bergerak
-    ctx.fillStyle = pixelTheme === "hujan" ? "rgba(71, 85, 105, 0.6)" : "rgba(51, 65, 85, 0.5)";
-    pixelClouds.forEach(c => {
-      c.x += c.speed;
-      if (c.x > canvas.width) c.x = -c.w;
-      ctx.fillRect(c.x, c.y, c.w, 20);
-      ctx.fillRect(c.x + 12, c.y - 8, c.w - 24, 12);
-    });
-
-    // 4. Efek Khusus Dinamis Sesuai Berita Indonesia
-    if (pixelTheme === "hujan") {
-      ctx.fillStyle = "#38bdf8";
-      raindrops.forEach(r => {
-        r.y += r.speed;
-        if (r.y > canvas.height) r.y = 0;
-        ctx.fillRect(r.x, r.y, 2, 8);
-      });
-    } else if (pixelTheme === "demo") {
-      // Demonstran Bundaran HI & Bendera Merah Putih berkibar
-      const time = Date.now() / 250;
-      const wave = Math.sin(time) * 4;
-      const demoX = monasX - 90;
-      
-      // Tiang bendera
-      ctx.fillStyle = "#94a3b8";
-      ctx.fillRect(demoX, groundY - 70, 3, 70);
-      // Bendera Merah Putih berkibar
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(demoX + 3, groundY - 70 + wave, 28, 10);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(demoX + 3, groundY - 60 + wave, 28, 10);
-
-      // Karakter pixel massa berorasi
-      ctx.fillStyle = "#cbd5e1";
-      ctx.fillRect(demoX - 10, groundY - 25, 8, 12);
-      ctx.fillRect(demoX + 10, groundY - 27, 8, 12);
-      ctx.fillRect(demoX + 25, groundY - 24, 8, 12);
-      ctx.fillRect(demoX + 40, groundY - 26, 8, 12);
-    }
-
-    requestAnimationFrame(render);
-  }
-
-  render();
-}
-
-function fetchNewsTopic() {
-  fetch("/api/news")
-    .then(r => r.json())
-    .then(res => {
-      if (res && res.data && res.data.posts && res.data.posts.length > 0) {
-        const item = res.data.posts[0];
-        const title = item.title;
-        const headlineEl = document.getElementById("tickerHeadline");
-        const tagEl = document.getElementById("tickerTag");
-        const iconEl = document.getElementById("pixelBannerIcon");
-
-        if (headlineEl) headlineEl.innerText = title;
-        if (tagEl) tagEl.innerText = "BERITA INDONESIA TERKINI";
-
-        const lower = title.toLowerCase();
-        if (lower.includes("demo") || lower.includes("aksi") || lower.includes("politik") || lower.includes("dpr")) {
-          pixelTheme = "demo";
-          if (iconEl) iconEl.innerText = "🚩";
-        } else if (lower.includes("hujan") || lower.includes("banjir") || lower.includes("cuaca") || lower.includes("bmkg")) {
-          pixelTheme = "hujan";
-          if (iconEl) iconEl.innerText = "🌧️";
-        } else {
-          pixelTheme = "cerah";
-          if (iconEl) iconEl.innerText = "🏙️";
-        }
-      }
-    })
-    .catch(() => {
-      const headlineEl = document.getElementById("tickerHeadline");
-      const tagEl = document.getElementById("tickerTag");
-      const iconEl = document.getElementById("pixelBannerIcon");
-      if (headlineEl) headlineEl.innerText = "Aspirasi massa terpantau aktif di kawasan Bundaran HI Jakarta";
-      if (tagEl) tagEl.innerText = "AKSI BUNDARAN HI";
-      if (iconEl) iconEl.innerText = "🚩";
-      pixelTheme = "demo";
-    });
-}
-
-
-
-
-
-
-// --- Sidebar Regenerative Multi-Layer Pixel Art Engine (4 Lanskap Unik) ---
-let newsItems = [
-  {
-    title: "Massa mengawal aspirasi & situasi politik di kawasan Bundaran HI Jakarta",
-    theme: "demo",
-    tag: "AKSI BUNDARAN HI",
-    date: "Isu Terkini",
-    link: "https://www.antaranews.com/search/bundaran-hi"
-  },
-  {
-    title: "BMKG: Peringatan dini potensi hujan lebat & cuaca ekstrem di pegunungan",
-    theme: "hujan",
-    tag: "BMKG & CUACA",
-    date: "Prakiraan 1 Minggu",
-    link: "https://www.bmkg.go.id/cuaca/prakiraan-cuaca-indonesia.bmkg"
-  },
-  {
-    title: "IHSG & Pasar Modal bergerak dinamis, investasi ekonomi digital menguat",
-    theme: "ekonomi",
-    tag: "PASAR & BISNIS",
-    date: "Pasar Keuangan",
-    link: "https://www.idx.co.id/"
-  },
-  {
-    title: "Ketahanan pangan nasional & panen raya terasering sawah Nusantara diperkuat",
-    theme: "nasional",
-    tag: "AGRO & PANGAN",
-    date: "Ketahanan Pangan",
-    link: "https://www.antaranews.com/top-news"
-  }
-];
-let currentNewsIdx = 0;
-let currentTheme = "bumiayu";
-
-// Partikel animasi
-let stars = [];
-for (let i = 0; i < 30; i++) {
-  stars.push({ x: Math.random() * 226, y: Math.random() * 55, a: Math.random() });
-}
-let rainDrops = [];
-for (let i = 0; i < 45; i++) {
-  rainDrops.push({ x: Math.random() * 226, y: Math.random() * 125, s: 4 + Math.random() * 3 });
-}
-let cloudPuffs = [
-  { x: 10, y: 15, w: 45, s: 0.2 },
-  { x: 90, y: 25, w: 55, s: 0.15 },
-  { x: 170, y: 10, w: 40, s: 0.25 }
-];
-
-function initSidebarPixelDiorama() {
-  const canvas = document.getElementById("sidebarPixelCanvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-
-  updateWallpaperDisplay();
-
-  function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // ========================================================
-    // LANSKAP 1: BUNDARAN HI & PATUNG SELAMAT DATANG (TEMA DEMO)
-    // ========================================================
-    if (currentTheme === "demo") {
-      // Langit Senja Merah Oranye Jakarta
-      let g = ctx.createLinearGradient(0, 0, 0, 125);
-      g.addColorStop(0, "#450a0a");
-      g.addColorStop(0.4, "#7f1d1d");
-      g.addColorStop(1, "#b45309");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, 226, 125);
-
-      // Matahari Senja Tenggelam
-      ctx.fillStyle = "#f97316";
-      ctx.fillRect(35, 45, 20, 20);
-
-      // Siluet Gedung Pencakar Langit Thamrin-Sudirman di Latar
-      ctx.fillStyle = "#27171d";
-      ctx.fillRect(10, 60, 24, 65);
-      ctx.fillRect(40, 52, 28, 73);
-      ctx.fillRect(158, 55, 30, 70);
-      ctx.fillRect(194, 62, 22, 63);
-
-      // Monumen Bundaran HI & Kolam Air Mancur Melingkar
-      ctx.fillStyle = "#1e1329";
-      ctx.fillRect(80, 85, 66, 40); // Kolam bundaran
-      ctx.fillStyle = "#0284c7";
-      ctx.fillRect(85, 92, 56, 12); // Air kolam
-      // Pancuran air pixel menyembur
-      const fTime = Date.now() / 200;
-      const fH = Math.sin(fTime) * 3;
-      ctx.fillStyle = "rgba(224, 242, 254, 0.75)";
-      ctx.fillRect(102, 85 - fH, 3, 7 + fH);
-      ctx.fillRect(121, 85 - fH, 3, 7 + fH);
-
-      // Tugu & Patung Selamat Datang (Dua orang melambaikan tangan)
-      ctx.fillStyle = "#0a0a14";
-      ctx.fillRect(110, 50, 6, 42); // Pilar tugu
-      ctx.fillRect(107, 44, 12, 6);  // Dasar patung
-      ctx.fillStyle = "#fbbf24";     // Sosok patung emas
-      ctx.fillRect(110, 36, 3, 8);   // Figur pria
-      ctx.fillRect(114, 37, 3, 7);   // Figur wanita
-
-      // Demonstran & Bendera Merah Putih Berkibar
-      const wave = Math.sin(Date.now() / 220) * 3;
-      ctx.fillStyle = "#94a3b8";
-      ctx.fillRect(68, 68, 2, 48); // Tiang
-      ctx.fillStyle = "#ef4444";
-      ctx.fillRect(70, 68 + wave, 22, 6);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(70, 74 + wave, 22, 6);
-
-      // Kerumunan Massa Berorasi
-      ctx.fillStyle = "#f8fafc";
-      ctx.fillRect(60, 98, 5, 8);
-      ctx.fillRect(72, 97, 5, 8);
-      ctx.fillRect(78, 98, 5, 8);
-      ctx.fillRect(85, 96, 5, 8);
-    }
-
-    // ========================================================
-    // LANSKAP 2: LEMBAH PEGUNUNGAN & BADAI PETIR (TEMA HUJAN)
-    // ========================================================
-    else if (currentTheme === "hujan") {
-      // Langit Kelabu Badai Mendung Pekat
-      let g = ctx.createLinearGradient(0, 0, 0, 125);
-      g.addColorStop(0, "#020617");
-      g.addColorStop(0.6, "#0f172a");
-      g.addColorStop(1, "#1e293b");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, 226, 125);
-
-      // Kilatan Petir Nyata Sesekali
-      if (Math.random() < 0.05) {
-        ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
-        ctx.fillRect(0, 0, 226, 125);
-        // Garis cabang petir
-        ctx.fillStyle = "#38bdf8";
-        ctx.fillRect(130, 0, 3, 25);
-        ctx.fillRect(132, 25, 4, 20);
-        ctx.fillRect(135, 45, 3, 30);
-      }
-
-      // Barisan Pegunungan Tropis Berlapis (Latar Belakang)
-      ctx.fillStyle = "#0c1726";
-      ctx.beginPath();
-      ctx.moveTo(0, 85); ctx.lineTo(60, 48); ctx.lineTo(130, 80); ctx.lineTo(190, 42); ctx.lineTo(226, 75); ctx.lineTo(226, 125); ctx.lineTo(0, 125);
-      ctx.fill();
-
-      // Pegunungan Latar Depan
-      ctx.fillStyle = "#070e17";
-      ctx.beginPath();
-      ctx.moveTo(0, 95); ctx.lineTo(95, 62); ctx.lineTo(170, 98); ctx.lineTo(226, 82); ctx.lineTo(226, 125); ctx.lineTo(0, 125);
-      ctx.fill();
-
-      // Pohon-pohon Kelapa Berayun Tertiup Angin
-      const sway = Math.sin(Date.now() / 180) * 4;
-      ctx.fillStyle = "#052e16";
-      // Batang pohon
-      ctx.fillRect(35, 85, 3, 35);
-      ctx.fillRect(180, 80, 3, 40);
-      // Daun kelapa
-      ctx.fillRect(25 + sway, 80, 24, 6);
-      ctx.fillRect(170 + sway, 75, 24, 6);
-
-      // Rintik Hujan Deras
-      ctx.fillStyle = "#38bdf8";
-      rainDrops.forEach(r => {
-        r.y += r.s;
-        if (r.y > 125) r.y = 0;
-        ctx.fillRect(r.x, r.y, 1.5, 6);
-      });
-    }
-
-    // ========================================================
-    // LANSKAP 3: CYBERPUNK CANDLESTICK MATRIX (TEMA EKONOMI/IHSG)
-    // ========================================================
-    else if (currentTheme === "ekonomi") {
-      // Langit Hijau Matrix Neon
-      let g = ctx.createLinearGradient(0, 0, 0, 125);
-      g.addColorStop(0, "#022c22");
-      g.addColorStop(0.6, "#064e3b");
-      g.addColorStop(1, "#047857");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, 226, 125);
-
-      // Garis Grid Finansial Digital
-      ctx.fillStyle = "rgba(4, 120, 87, 0.35)";
-      for (let y = 15; y < 125; y += 18) {
-        ctx.fillRect(0, y, 226, 1);
-      }
-      for (let x = 15; x < 226; x += 30) {
-        ctx.fillRect(x, 0, 1, 125);
-      }
-
-      // Candlestick Chart Saham IHSG Hijau Menyala Real-Time
-      const bars = [
-        { x: 25, top: 75, h: 22, wickTop: 65, wickH: 40, up: true },
-        { x: 55, top: 68, h: 28, wickTop: 58, wickH: 48, up: true },
-        { x: 85, top: 72, h: 18, wickTop: 65, wickH: 32, up: false },
-        { x: 115, top: 55, h: 32, wickTop: 45, wickH: 52, up: true },
-        { x: 145, top: 48, h: 36, wickTop: 38, wickH: 56, up: true },
-        { x: 175, top: 42, h: 42, wickTop: 30, wickH: 64, up: true },
-        { x: 205, top: 35, h: 48, wickTop: 22, wickH: 70, up: true }
-      ];
-
-      bars.forEach(b => {
-        // Sumbu Candle (Wick)
-        ctx.fillStyle = b.up ? "#6ee7b7" : "#fca5a5";
-        ctx.fillRect(b.x + 4, b.wickTop, 2, b.wickH);
-        // Tubuh Candle
-        ctx.fillStyle = b.up ? "#00d284" : "#f83245";
-        ctx.fillRect(b.x, b.top, 10, b.h);
-      });
-
-      // Garis Indikator Bergerak Naik (Bullish Trendline)
-      ctx.fillStyle = "#fbbf24";
-      ctx.fillRect(15, 88, 30, 2);
-      ctx.fillRect(45, 80, 30, 2);
-      ctx.fillRect(75, 75, 30, 2);
-      ctx.fillRect(105, 62, 30, 2);
-      ctx.fillRect(135, 52, 30, 2);
-      ctx.fillRect(165, 42, 30, 2);
-      ctx.fillRect(195, 32, 25, 2);
-      // Panah Target Hijau
-      ctx.fillStyle = "#6ee7b7";
-      ctx.fillRect(215, 28, 6, 6);
-    }
-
-    // ========================================================
-    // LANSKAP 4: TERASERING SAWAH & MATAHARI PAGI (TEMA NASIONAL/AGRO)
-    // ========================================================
-    else {
-      // Langit Pagi Biru Tropis Indonesia
-      let g = ctx.createLinearGradient(0, 0, 0, 125);
-      g.addColorStop(0, "#0284c7");
-      g.addColorStop(0.6, "#38bdf8");
-      g.addColorStop(1, "#bae6fd");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, 226, 125);
-
-      // Matahari Terbit Kuning Cerah
-      ctx.fillStyle = "#fef08a";
-      ctx.fillRect(175, 18, 22, 22);
-      ctx.fillStyle = "#fde047";
-      ctx.fillRect(178, 21, 16, 16);
-
-      // Awan Pagi Melayang
-      ctx.fillStyle = "rgba(255, 255, 255, 0.75)";
-      cloudPuffs.forEach(c => {
-        c.x += c.s;
-        if (c.x > 226) c.x = -c.w;
-        ctx.fillRect(c.x, c.y, c.w, 9);
-        ctx.fillRect(c.x + 6, c.y - 4, c.w - 12, 7);
-      });
-
-      // Terasering Sawah Hijau Bertingkat
-      ctx.fillStyle = "#15803d";
-      ctx.fillRect(0, 68, 226, 14);
-      ctx.fillStyle = "#16a34a";
-      ctx.fillRect(0, 80, 226, 15);
-      ctx.fillStyle = "#22c55e";
-      ctx.fillRect(0, 93, 226, 16);
-      ctx.fillStyle = "#4ade80";
-      ctx.fillRect(0, 107, 226, 18);
-
-      // Pematang Sawah Cokelat Pixel
-      ctx.fillStyle = "#78350f";
-      ctx.fillRect(0, 79, 226, 2);
-      ctx.fillRect(0, 92, 226, 2);
-      ctx.fillRect(0, 106, 226, 2);
-
-      // Gubuk Sawah Petani Tradisional
-      ctx.fillStyle = "#92400e";
-      ctx.fillRect(45, 75, 14, 10); // Dinding
-      ctx.fillStyle = "#b45309";
-      ctx.fillRect(42, 71, 20, 5);  // Atap rumbia
-    }
-
-    requestAnimationFrame(render);
-  }
-
-  render();
-}
-
+// --- Active Multi-Layer Pixel Art Wallpaper Engine (8 Tema Nusantara) ---
 const pixelWallpapers = [
   {
     theme: "bumiayu",
     tag: "BUMIAYU",
     badge: "GUNUNG SLAMET",
-    title: "Lembah Asri Bumiayu, Gunung Slamet & Jembatan Sakalibel",
+    title: "Lembah Asri Bumiayu, Siluet Gunung Slamet & Jembatan Sakalibel",
     badgeColor: "#059669"
   },
   {
@@ -1476,8 +1028,309 @@ const pixelWallpapers = [
     badgeColor: "#0284c7"
   }
 ];
+
 let currentWallpaperIdx = 0;
 let fullWallpaperEnabled = true;
+
+// Partikel Awan Nusantara
+let nusantaraBgClouds = [
+  { x: 30, y: 35, w: 100, speed: 0.35 },
+  { x: 380, y: 65, w: 140, speed: 0.22 },
+  { x: 780, y: 30, w: 110, speed: 0.28 },
+  { x: 1150, y: 55, w: 130, speed: 0.25 }
+];
+let sideCloudPuffs = [
+  { x: 10, y: 15, w: 45, s: 0.2 },
+  { x: 90, y: 25, w: 55, s: 0.15 },
+  { x: 170, y: 10, w: 40, s: 0.25 }
+];
+
+// Mesin Gambar Lanskap Nusantara Pixel Art Serbaguna
+function drawNusantaraScene(ctx, width, height, theme, isSidebar) {
+  const scaleX = width / 226;
+  const scaleY = height / 125;
+  const t = Date.now() / 250;
+
+  if (theme === "bumiayu") {
+    // ⛰️ BUMIAYU: Lembah Asri, Gunung Slamet & Jembatan Kereta Sakalibel
+    let g = ctx.createLinearGradient(0, 0, 0, height);
+    g.addColorStop(0, "#0369a1");
+    g.addColorStop(0.5, "#38bdf8");
+    g.addColorStop(1, "#bae6fd");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, width, height);
+
+    // Siluet Gunung Slamet Megah
+    ctx.fillStyle = "#1e293b";
+    ctx.beginPath();
+    ctx.moveTo(width * 0.08, height * 0.75);
+    ctx.lineTo(width * 0.48, height * 0.14);
+    ctx.lineTo(width * 0.88, height * 0.75);
+    ctx.closePath();
+    ctx.fill();
+
+    // Lereng kedua
+    ctx.fillStyle = "#0f172a";
+    ctx.beginPath();
+    ctx.moveTo(width * 0.35, height * 0.75);
+    ctx.lineTo(width * 0.65, height * 0.28);
+    ctx.lineTo(width * 0.95, height * 0.75);
+    ctx.closePath();
+    ctx.fill();
+
+    // Lembah Hijau Asri & Perbukitan
+    ctx.fillStyle = "#15803d";
+    ctx.fillRect(0, height * 0.68, width, height * 0.32);
+    ctx.fillStyle = "#166534";
+    ctx.fillRect(0, height * 0.78, width, height * 0.22);
+
+    // Jembatan Sakalibel (Pilar-Pilar Bata Merah)
+    ctx.fillStyle = "#b91c1c";
+    const bridgeY = height * 0.62;
+    const bridgeH = height * 0.12;
+    ctx.fillRect(0, bridgeY, width, 4 * scaleY);
+    const pillarCount = isSidebar ? 6 : 14;
+    const pillarStep = width / pillarCount;
+    for (let i = 0; i < pillarCount; i++) {
+      ctx.fillRect(i * pillarStep + 10, bridgeY, 8 * scaleX, bridgeH);
+    }
+
+    // Kereta Api Melintas di Atas Jembatan Sakalibel
+    const trainX = ((Date.now() / 32) % (width + 120)) - 100;
+    ctx.fillStyle = "#ea580c";
+    ctx.fillRect(trainX, bridgeY - 7 * scaleY, 40 * scaleX, 6 * scaleY);
+    ctx.fillStyle = "#facc15";
+    ctx.fillRect(trainX + 32 * scaleX, bridgeY - 6 * scaleY, 5 * scaleX, 4 * scaleY);
+  } else if (theme === "jawa") {
+    // 🛕 TANAH JAWA: Candi Borobudur & Kabut Fajar Magelang
+    let g = ctx.createLinearGradient(0, 0, 0, height);
+    g.addColorStop(0, "#451a03");
+    g.addColorStop(0.5, "#9a3412");
+    g.addColorStop(1, "#f59e0b");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "#fef08a";
+    ctx.fillRect(width * 0.7, height * 0.18, 25 * scaleX, 25 * scaleY);
+
+    ctx.fillStyle = "#1c1917";
+    ctx.fillRect(width * 0.2, height * 0.55, width * 0.6, height * 0.45);
+    ctx.fillRect(width * 0.3, height * 0.42, width * 0.4, height * 0.15);
+    ctx.fillRect(width * 0.42, height * 0.28, width * 0.16, height * 0.15);
+    ctx.fillRect(width * 0.48, height * 0.18, width * 0.04, height * 0.12);
+
+    ctx.fillStyle = "#14532d";
+    ctx.fillRect(width * 0.05, height * 0.45, 30 * scaleX, 25 * scaleY);
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(width * 0.1, height * 0.68, 6 * scaleX, 25 * scaleY);
+  } else if (theme === "madura") {
+    // 🐂 MADURA: Karapan Sapi & Pesisir Selat Madura
+    let g = ctx.createLinearGradient(0, 0, 0, height);
+    g.addColorStop(0, "#0369a1");
+    g.addColorStop(0.6, "#38bdf8");
+    g.addColorStop(1, "#fdba74");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "#d97706";
+    ctx.fillRect(0, height * 0.7, width, height * 0.3);
+    ctx.fillStyle = "#b45309";
+    ctx.fillRect(0, height * 0.85, width, height * 0.15);
+
+    const cowWave = Math.sin(t * 1.5) * (3 * scaleY);
+    const cowX = ((Date.now() / 25) % (width + 80)) - 60;
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(cowX, height * 0.72 + cowWave, 24 * scaleX, 14 * scaleY);
+    ctx.fillRect(cowX + 28 * scaleX, height * 0.72 - cowWave, 24 * scaleX, 14 * scaleY);
+    ctx.fillStyle = "#dc2626";
+    ctx.fillRect(cowX + 20 * scaleX, height * 0.68 + cowWave, 4 * scaleX, 5 * scaleY);
+    ctx.fillRect(cowX + 48 * scaleX, height * 0.68 - cowWave, 4 * scaleX, 5 * scaleY);
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(cowX - 10 * scaleX, height * 0.68, 8 * scaleX, 12 * scaleY);
+  } else if (theme === "bali") {
+    // 🌺 BALI: Danau Beratan Bedugul & Pura Ulun Danu
+    let g = ctx.createLinearGradient(0, 0, 0, height);
+    g.addColorStop(0, "#1e1b4b");
+    g.addColorStop(0.5, "#4338ca");
+    g.addColorStop(1, "#818cf8");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "#1e3a8a";
+    ctx.fillRect(0, height * 0.68, width, height * 0.32);
+
+    ctx.fillStyle = "#451a03";
+    ctx.fillRect(width * 0.42, height * 0.32, 35 * scaleX, 7 * scaleY);
+    ctx.fillRect(width * 0.44, height * 0.40, 27 * scaleX, 8 * scaleY);
+    ctx.fillRect(width * 0.46, height * 0.48, 19 * scaleX, 9 * scaleY);
+    ctx.fillRect(width * 0.48, height * 0.57, 11 * scaleX, 10 * scaleY);
+    ctx.fillRect(width * 0.49, height * 0.25, 4 * scaleX, 10 * scaleY);
+
+    ctx.fillStyle = "#facc15";
+    ctx.fillRect(width * 0.35, height * 0.58, 12 * scaleX, 4 * scaleY);
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(width * 0.39, height * 0.62, 2 * scaleX, 18 * scaleY);
+  } else if (theme === "sumatra") {
+    // 🐃 SUMATRA: Ngarai Sianok & Rumah Gadang Minangkabau
+    let g = ctx.createLinearGradient(0, 0, 0, height);
+    g.addColorStop(0, "#064e3b");
+    g.addColorStop(0.6, "#047857");
+    g.addColorStop(1, "#34d399");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(0, height * 0.45, width * 0.3, height * 0.55);
+    ctx.fillRect(width * 0.75, height * 0.4, width * 0.25, height * 0.6);
+
+    ctx.fillStyle = "#b45309";
+    ctx.fillRect(width * 0.38, height * 0.68, 55 * scaleX, 22 * scaleY);
+    ctx.fillStyle = "#1e293b";
+    ctx.beginPath();
+    ctx.moveTo(width * 0.34, height * 0.62);
+    ctx.lineTo(width * 0.45, height * 0.52);
+    ctx.lineTo(width * 0.55, height * 0.62);
+    ctx.lineTo(width * 0.65, height * 0.52);
+    ctx.lineTo(width * 0.72, height * 0.62);
+    ctx.lineTo(width * 0.68, height * 0.68);
+    ctx.lineTo(width * 0.38, height * 0.68);
+    ctx.closePath();
+    ctx.fill();
+  } else if (theme === "kalimantan") {
+    // 🛶 KALIMANTAN: Sungai Barito & Pasar Terapung
+    let g = ctx.createLinearGradient(0, 0, 0, height);
+    g.addColorStop(0, "#065f46");
+    g.addColorStop(0.5, "#059669");
+    g.addColorStop(1, "#6ee7b7");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "#022c22";
+    ctx.fillRect(0, height * 0.45, width, height * 0.25);
+
+    ctx.fillStyle = "#0284c7";
+    ctx.fillRect(0, height * 0.68, width, height * 0.32);
+
+    const boatX = ((Date.now() / 40) % (width + 90)) - 70;
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(boatX, height * 0.78, 32 * scaleX, 6 * scaleY);
+    ctx.fillStyle = "#f97316";
+    ctx.fillRect(boatX + 8 * scaleX, height * 0.74, 5 * scaleX, 4 * scaleY);
+    ctx.fillStyle = "#eab308";
+    ctx.fillRect(boatX + 15 * scaleX, height * 0.74, 5 * scaleX, 4 * scaleY);
+    ctx.fillStyle = "#22c55e";
+    ctx.fillRect(boatX + 22 * scaleX, height * 0.74, 5 * scaleX, 4 * scaleY);
+  } else if (theme === "sulawesi") {
+    // 🛖 SULAWESI: Perbukitan Tana Toraja & Rumah Adat Tongkonan
+    let g = ctx.createLinearGradient(0, 0, 0, height);
+    g.addColorStop(0, "#312e81");
+    g.addColorStop(0.5, "#4338ca");
+    g.addColorStop(1, "#818cf8");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "#15803d";
+    ctx.fillRect(0, height * 0.65, width, height * 0.35);
+
+    ctx.fillStyle = "#92400e";
+    ctx.fillRect(width * 0.4, height * 0.68, 42 * scaleX, 22 * scaleY);
+    ctx.fillStyle = "#451a03";
+    ctx.fillRect(width * 0.42, height * 0.82, 3 * scaleX, 10 * scaleY);
+    ctx.fillRect(width * 0.48, height * 0.82, 3 * scaleX, 10 * scaleY);
+    ctx.fillRect(width * 0.54, height * 0.82, 3 * scaleX, 10 * scaleY);
+
+    ctx.fillStyle = "#b45309";
+    ctx.beginPath();
+    ctx.moveTo(width * 0.32, height * 0.48);
+    ctx.lineTo(width * 0.48, height * 0.62);
+    ctx.lineTo(width * 0.64, height * 0.48);
+    ctx.lineTo(width * 0.58, height * 0.68);
+    ctx.lineTo(width * 0.38, height * 0.68);
+    ctx.closePath();
+    ctx.fill();
+  } else {
+    // 🏝️ TANAH PAPUA: Gugusan Karst Zamrud Raja Ampat & Honai
+    let g = ctx.createLinearGradient(0, 0, 0, height);
+    g.addColorStop(0, "#082f49");
+    g.addColorStop(0.5, "#0284c7");
+    g.addColorStop(1, "#38bdf8");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "#0369a1";
+    ctx.fillRect(0, height * 0.65, width, height * 0.35);
+
+    ctx.fillStyle = "#166534";
+    ctx.beginPath();
+    ctx.arc(width * 0.25, height * 0.65, 26 * scaleX, Math.PI, 0, false);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(width * 0.72, height * 0.65, 34 * scaleX, Math.PI, 0, false);
+    ctx.fill();
+
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(width * 0.44, height * 0.74, 24 * scaleX, 14 * scaleY);
+    ctx.fillStyle = "#b45309";
+    ctx.beginPath();
+    ctx.arc(width * 0.49, height * 0.74, 18 * scaleX, Math.PI, 0, false);
+    ctx.fill();
+  }
+
+  // Awan Melayang
+  ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+  if (isSidebar) {
+    sideCloudPuffs.forEach(c => {
+      c.x += c.s;
+      if (c.x > 226) c.x = -c.w;
+      ctx.fillRect(c.x, c.y, c.w, 8);
+      ctx.fillRect(c.x + 5, c.y - 3, c.w - 10, 6);
+    });
+  } else {
+    nusantaraBgClouds.forEach(c => {
+      c.x += c.speed;
+      if (c.x > width) c.x = -c.w;
+      ctx.fillRect(c.x, c.y, c.w, 18);
+      ctx.fillRect(c.x + 15, c.y - 8, c.w - 30, 14);
+    });
+  }
+}
+
+function initPixelCanvas() {
+  const canvas = document.getElementById("pixelBackgroundCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  function render() {
+    if (fullWallpaperEnabled) {
+      const activeTheme = pixelWallpapers[currentWallpaperIdx]?.theme || "bumiayu";
+      drawNusantaraScene(ctx, canvas.width, canvas.height, activeTheme, false);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    requestAnimationFrame(render);
+  }
+  render();
+}
+
+function initSidebarPixelDiorama() {
+  const canvas = document.getElementById("sidebarPixelCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  function render() {
+    const activeTheme = pixelWallpapers[currentWallpaperIdx]?.theme || "bumiayu";
+    drawNusantaraScene(ctx, canvas.width, canvas.height, activeTheme, true);
+    requestAnimationFrame(render);
+  }
+  render();
+}
 
 function nextPixelWallpaper() {
   currentWallpaperIdx = (currentWallpaperIdx + 1) % pixelWallpapers.length;
@@ -1487,9 +1340,6 @@ function nextPixelWallpaper() {
 function updateWallpaperDisplay() {
   const item = pixelWallpapers[currentWallpaperIdx];
   if (!item) return;
-
-  currentTheme = item.theme;
-  pixelTheme = item.theme;
 
   const headlineEl = document.getElementById("sidePixelHeadline");
   const badgeEl = document.getElementById("sidePixelBadge");
@@ -1521,7 +1371,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initSidebarPixelDiorama();
   updateWallpaperDisplay();
 });
-
 
 // =========================================================================
 // IMMICH SUITE & HEALTH MONITOR FRONTEND LOGIC

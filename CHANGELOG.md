@@ -4,6 +4,22 @@ Semua riwayat perubahan, penambahan fitur, peningkatan performa, dan perbaikan b
 
 ---
 
+## [v1.3.2] - 2026-11-03
+
+### ✨ Penyempurnaan & Pembersihan Total
+1. **Pembersihan Widget Berita & Migrasi Penuh ke Active Pixel Art Nusantara**:
+   - Menghapus widget banner berita di header dashboard secara permanen.
+   - Mengintegrasikan mesin render kanvas ganda (*Dual Render Engine*) yang sinkron: kanvas sidebar dan kanvas fullscreen (`#pixelBackgroundCanvas`) kini 100% menggunakan 8 Lanskap Nusantara (Bumiayu Gunung Slamet, Jawa Candi Borobudur, Madura Karapan Sapi, Bali Pura Ulun Danu, Sumatra Rumah Gadang, Kalimantan Pasar Terapung, Sulawesi Tongkonan, Papua Raja Ampat & Honai).
+   - Menjadikan tema **Bumiayu** sebagai tema pembuka default.
+
+2. **Rebranding Konsisten ke "Kompic"**:
+   - Memperbarui title browser dan sidebar brand name dari "Adminator" menjadi "Kompic - Immich Media Suite".
+
+3. **Migrasi Direktori STB (/root/kompresor ➔ /root/kompic)**:
+   - Menyiapkan script migrasi otomatis folder kerja dan unit systemd `immich-optimizer.service` ke `/root/kompic`.
+
+---
+
 ## [v1.3.1] - 2026-11-03
 
 ### 🐛 Perbaikan Bug Kritis (Critical Fixes)

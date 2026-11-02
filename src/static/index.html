@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Adminator - Immich Local Media Optimizer (ODROID-C2)</title>
+  <title>Kompic - Immich Media Optimizer Suite</title>
   <link rel="stylesheet" href="/static/style.css">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 </head>
@@ -14,7 +14,7 @@
   <div class="auth-modal" id="authModal" style="display: none;">
     <div class="auth-box">
       <h2>🔐 Masuk Web UI</h2>
-      <p>Akses Adminator Media Optimizer (ODROID-C2)</p>
+      <p>Akses Kompic Media Optimizer Suite</p>
       <input type="password" id="authPassword" placeholder="Masukkan password..." onkeydown="if(event.key==='Enter') verifyPassword()">
       <button onclick="verifyPassword()">Buka Dashboard</button>
       <div class="auth-error" id="authError">Password salah, coba lagi!</div>
@@ -28,8 +28,8 @@
     <div class="brand">
       <div class="brand-icon">📸</div>
       <div class="brand-info">
-        <span class="brand-title">Adminator</span>
-        <span class="brand-subtitle">Immich Photos</span>
+        <span class="brand-title">Kompic</span>
+        <span class="brand-subtitle">Immich Suite</span>
       </div>
     </div>
 
@@ -146,15 +146,6 @@
       </div>
 
       <!-- Hardware Telemetry: CPU Temp & RAM Gauge -->
-      <!-- Dynamic Pixel Art News Banner (Indonesia Live) -->
-      <div class="pixel-banner-header" id="pixelBannerWidget">
-        <div class="pixel-flag-icon" id="pixelBannerIcon">🚩</div>
-        <div class="pixel-news-info">
-          <span class="pixel-news-tag" id="tickerTag">BERITA INDONESIA TERKINI</span>
-          <span class="pixel-news-title" id="tickerHeadline">Memuat siaran langsung aspirasi &amp; situasi nasional...</span>
-        </div>
-      </div>
-
       <div class="sys-metrics-top">
         <div class="metric-pill">
           <span class="dot-indicator dot-normal" id="top-temp-dot"></span>
