@@ -1194,6 +1194,365 @@ function initSidebarPixelDiorama() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // ========================================================
+    // 1. TEMA BUMIAYU (GUNUNG SLAMET & JEMBATAN SAKALIBEL)
+    // ========================================================
+    if (currentTheme === "bumiayu") {
+      let g = ctx.createLinearGradient(0, 0, 0, 125);
+      g.addColorStop(0, "#0369a1");
+      g.addColorStop(0.5, "#38bdf8");
+      g.addColorStop(1, "#bae6fd");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 226, 125);
+
+      // Siluet Megah Gunung Slamet
+      ctx.fillStyle = "#1e3a8a";
+      ctx.beginPath();
+      ctx.moveTo(30, 85);
+      ctx.lineTo(110, 28);
+      ctx.lineTo(190, 85);
+      ctx.fill();
+
+      // Lereng Bukit & Pinus Bumiayu
+      ctx.fillStyle = "#065f46";
+      ctx.fillRect(0, 82, 226, 18);
+      ctx.fillStyle = "#047857";
+      ctx.fillRect(0, 98, 226, 27);
+
+      // Jembatan Kereta Api Sakalibel Khas Bumiayu (Pilar Merah Bata)
+      ctx.fillStyle = "#991b1b";
+      ctx.fillRect(15, 88, 196, 4); // Rel jembatan
+      for (let p = 25; p < 210; p += 32) {
+        ctx.fillRect(p, 92, 8, 30); // Tiang pilar bata
+        ctx.fillRect(p - 2, 90, 12, 3);
+      }
+    }
+    // ========================================================
+    // 2. TEMA TANAH JAWA (CANDI BOROBUDUR & KABUT FAJAR)
+    // ========================================================
+    else if (currentTheme === "jawa") {
+      let g = ctx.createLinearGradient(0, 0, 0, 125);
+      g.addColorStop(0, "#451a03");
+      g.addColorStop(0.5, "#b45309");
+      g.addColorStop(1, "#fde68a");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 226, 125);
+
+      // Matahari Terbit Keemasan
+      ctx.fillStyle = "#fef08a";
+      ctx.fillRect(100, 35, 26, 26);
+
+      // Undakan Candi Borobudur
+      ctx.fillStyle = "#334155";
+      ctx.fillRect(30, 80, 166, 10);
+      ctx.fillRect(55, 70, 116, 10);
+      ctx.fillRect(80, 60, 66, 10);
+      ctx.fillRect(103, 48, 20, 12); // Stupa Utama
+
+      // Stupa-stupa Kecil
+      ctx.fillStyle = "#475569";
+      ctx.fillRect(65, 66, 6, 4);
+      ctx.fillRect(90, 66, 6, 4);
+      ctx.fillRect(130, 66, 6, 4);
+      ctx.fillRect(155, 66, 6, 4);
+
+      // Pelataran Rumput Hijau Tua
+      ctx.fillStyle = "#1e293b";
+      ctx.fillRect(0, 90, 226, 35);
+    }
+    // ========================================================
+    // 3. TEMA PULAU MADURA (ARENA KARAPAN SAPI & SELAT MADURA)
+    // ========================================================
+    else if (currentTheme === "madura") {
+      let g = ctx.createLinearGradient(0, 0, 0, 125);
+      g.addColorStop(0, "#ea580c");
+      g.addColorStop(0.6, "#facc15");
+      g.addColorStop(1, "#fed7aa");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 226, 125);
+
+      // Pesisir Pantai & Tanah Lapang Karapan
+      ctx.fillStyle = "#ca8a04";
+      ctx.fillRect(0, 78, 226, 47);
+      ctx.fillStyle = "#a16207";
+      ctx.fillRect(0, 75, 226, 4);
+
+      // Sepasang Sapi Karapan Merah Cokelat Pixel
+      ctx.fillStyle = "#831843";
+      ctx.fillRect(50, 80, 22, 14); // Sapi 1
+      ctx.fillRect(78, 80, 22, 14); // Sapi 2
+      ctx.fillStyle = "#fbbf24";
+      ctx.fillRect(60, 76, 4, 6);  // Hiasan kepala tanduk
+      ctx.fillRect(88, 76, 4, 6);
+
+      // Joki Berdiri di Kaleles (Kereta Kayu)
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(105, 75, 8, 16);
+      ctx.fillStyle = "#dc2626";
+      ctx.fillRect(105, 72, 8, 4); // Ikat kepala Odheng
+    }
+    // ========================================================
+    // 4. TEMA BALI (PURA ULUN DANU BEDUGUL & DANAU BERATAN)
+    // ========================================================
+    else if (currentTheme === "bali") {
+      let g = ctx.createLinearGradient(0, 0, 0, 125);
+      g.addColorStop(0, "#312e81");
+      g.addColorStop(0.5, "#6366f1");
+      g.addColorStop(1, "#c7d2fe");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 226, 125);
+
+      // Air Danau Beratan Tenang
+      ctx.fillStyle = "#1e1b4b";
+      ctx.fillRect(0, 85, 226, 40);
+      ctx.fillStyle = "#4338ca";
+      ctx.fillRect(0, 85, 226, 3);
+
+      // Atap Meru Pura Bertingkat 5
+      ctx.fillStyle = "#1c1917";
+      ctx.fillRect(75, 78, 50, 7);
+      ctx.fillRect(80, 70, 40, 6);
+      ctx.fillRect(85, 63, 30, 5);
+      ctx.fillRect(90, 57, 20, 5);
+      ctx.fillRect(94, 51, 12, 5);
+      ctx.fillRect(98, 45, 4, 6); // Puncak
+
+      // Payung Tedung Kuning Suci Khas Bali
+      ctx.fillStyle = "#eab308";
+      ctx.fillRect(60, 72, 10, 4);
+      ctx.fillStyle = "#78350f";
+      ctx.fillRect(64, 76, 2, 12);
+    }
+    // ========================================================
+    // 5. TEMA SUMATRA (LEMBAH NGARAI SIANOK & RUMAH GADANG)
+    // ========================================================
+    else if (currentTheme === "sumatra") {
+      let g = ctx.createLinearGradient(0, 0, 0, 125);
+      g.addColorStop(0, "#14532d");
+      g.addColorStop(0.5, "#4ade80");
+      g.addColorStop(1, "#fef08a");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 226, 125);
+
+      // Dinding Tebing Curam Ngarai Sianok
+      ctx.fillStyle = "#78350f";
+      ctx.fillRect(0, 60, 45, 65);
+      ctx.fillRect(180, 55, 46, 70);
+
+      // Lembah Hijau
+      ctx.fillStyle = "#15803d";
+      ctx.fillRect(40, 85, 145, 40);
+
+      // Rumah Gadang Minangkabau (Gonjong Khas Tanduk Kerbau)
+      ctx.fillStyle = "#b45309";
+      ctx.fillRect(80, 78, 65, 14); // Badan rumah
+      ctx.fillStyle = "#451a03";
+      // Atap gonjong melengkung
+      ctx.fillRect(75, 72, 75, 6);
+      ctx.fillRect(70, 65, 6, 8); // Tanduk kiri
+      ctx.fillRect(149, 65, 6, 8); // Tanduk kanan
+      ctx.fillRect(107, 66, 10, 7); // Gonjong tengah
+    }
+    // ========================================================
+    // 6. TEMA KALIMANTAN (SUNGAI BARITO & PASAR TERAPUNG)
+    // ========================================================
+    else if (currentTheme === "kalimantan") {
+      let g = ctx.createLinearGradient(0, 0, 0, 125);
+      g.addColorStop(0, "#064e3b");
+      g.addColorStop(0.5, "#10b981");
+      g.addColorStop(1, "#a7f3d0");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 226, 125);
+
+      // Hutan Hujan Tropis Borneo
+      ctx.fillStyle = "#022c22";
+      for (let t = 0; t < 226; t += 18) {
+        ctx.fillRect(t, 55, 16, 25);
+      }
+
+      // Air Sungai Barito Cokelat Alami
+      ctx.fillStyle = "#78350f";
+      ctx.fillRect(0, 78, 226, 47);
+
+      // Jukung / Perahu Pasar Terapung & Buah-buahan Warna-warni
+      ctx.fillStyle = "#451a03";
+      ctx.fillRect(35, 92, 40, 8); // Perahu 1
+      ctx.fillRect(130, 88, 45, 8); // Perahu 2
+      // Muatan Jeruk & Pisang
+      ctx.fillStyle = "#f59e0b";
+      ctx.fillRect(45, 88, 12, 4);
+      ctx.fillStyle = "#84cc16";
+      ctx.fillRect(145, 84, 14, 4);
+      // Topi Tanggui Bulat Petani
+      ctx.fillStyle = "#fef08a";
+      ctx.fillRect(65, 86, 10, 3);
+      ctx.fillRect(160, 82, 10, 3);
+    }
+    // ========================================================
+    // 7. TEMA SULAWESI (TANA TORAJA & RUMAH TONGKONAN)
+    // ========================================================
+    else if (currentTheme === "sulawesi") {
+      let g = ctx.createLinearGradient(0, 0, 0, 125);
+      g.addColorStop(0, "#581c87");
+      g.addColorStop(0.5, "#c084fc");
+      g.addColorStop(1, "#f3e8ff");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 226, 125);
+
+      // Bukit Karst Toraja
+      ctx.fillStyle = "#3b0764";
+      ctx.fillRect(0, 75, 226, 50);
+
+      // Tongkonan (Atap Berbentuk Perahu Menjulang Tinggi)
+      ctx.fillStyle = "#701a75";
+      ctx.fillRect(85, 78, 55, 20); // Badan tiang kayu
+      ctx.fillStyle = "#4a044e";
+      ctx.fillRect(70, 72, 85, 7);  // Dasar atap
+      ctx.fillRect(60, 60, 12, 14); // Haluan depan melengkung
+      ctx.fillRect(153, 60, 12, 14); // Buritan belakang
+    }
+    // ========================================================
+    // 8. TEMA TANAH PAPUA (RAJA AMPAT & RUMAH HONAI)
+    // ========================================================
+    else {
+      let g = ctx.createLinearGradient(0, 0, 0, 125);
+      g.addColorStop(0, "#082f49");
+      g.addColorStop(0.5, "#0284c7");
+      g.addColorStop(1, "#38bdf8");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 226, 125);
+
+      // Laut Pesisir Toska Raja Ampat
+      ctx.fillStyle = "#0f766e";
+      ctx.fillRect(0, 82, 226, 43);
+      ctx.fillStyle = "#14b8a6";
+      ctx.fillRect(0, 82, 226, 3);
+
+      // Gugusan Pulau Karst Zamrud
+      ctx.fillStyle = "#064e3b";
+      ctx.beginPath();
+      ctx.arc(45, 82, 22, Math.PI, 0);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(175, 82, 28, Math.PI, 0);
+      ctx.fill();
+
+      // Rumah Adat Honai Tradisional di Pesisir
+      ctx.fillStyle = "#78350f";
+      ctx.fillRect(100, 85, 26, 14); // Dinding kayu bundar
+      ctx.fillStyle = "#ca8a04";
+      ctx.beginPath();
+      ctx.arc(113, 85, 17, Math.PI, 0); // Atap jerami kubah
+      ctx.fill();
+    }
+    requestAnimationFrame(render);
+  }
+
+  render();
+}
+
+function fetchNewsTopic() {
+  fetch("/api/news")
+    .then(r => r.json())
+    .then(res => {
+      if (res && res.data && res.data.posts && res.data.posts.length > 0) {
+        const item = res.data.posts[0];
+        const title = item.title;
+        const headlineEl = document.getElementById("tickerHeadline");
+        const tagEl = document.getElementById("tickerTag");
+        const iconEl = document.getElementById("pixelBannerIcon");
+
+        if (headlineEl) headlineEl.innerText = title;
+        if (tagEl) tagEl.innerText = "BERITA INDONESIA TERKINI";
+
+        const lower = title.toLowerCase();
+        if (lower.includes("demo") || lower.includes("aksi") || lower.includes("politik") || lower.includes("dpr")) {
+          pixelTheme = "demo";
+          if (iconEl) iconEl.innerText = "🚩";
+        } else if (lower.includes("hujan") || lower.includes("banjir") || lower.includes("cuaca") || lower.includes("bmkg")) {
+          pixelTheme = "hujan";
+          if (iconEl) iconEl.innerText = "🌧️";
+        } else {
+          pixelTheme = "cerah";
+          if (iconEl) iconEl.innerText = "🏙️";
+        }
+      }
+    })
+    .catch(() => {
+      const headlineEl = document.getElementById("tickerHeadline");
+      const tagEl = document.getElementById("tickerTag");
+      const iconEl = document.getElementById("pixelBannerIcon");
+      if (headlineEl) headlineEl.innerText = "Aspirasi massa terpantau aktif di kawasan Bundaran HI Jakarta";
+      if (tagEl) tagEl.innerText = "AKSI BUNDARAN HI";
+      if (iconEl) iconEl.innerText = "🚩";
+      pixelTheme = "demo";
+    });
+}
+
+
+
+
+
+
+// --- Sidebar Regenerative Multi-Layer Pixel Art Engine (4 Lanskap Unik) ---
+let newsItems = [
+  {
+    title: "Massa mengawal aspirasi & situasi politik di kawasan Bundaran HI Jakarta",
+    theme: "demo",
+    tag: "AKSI BUNDARAN HI",
+    date: "Isu Terkini",
+    link: "https://www.antaranews.com/search/bundaran-hi"
+  },
+  {
+    title: "BMKG: Peringatan dini potensi hujan lebat & cuaca ekstrem di pegunungan",
+    theme: "hujan",
+    tag: "BMKG & CUACA",
+    date: "Prakiraan 1 Minggu",
+    link: "https://www.bmkg.go.id/cuaca/prakiraan-cuaca-indonesia.bmkg"
+  },
+  {
+    title: "IHSG & Pasar Modal bergerak dinamis, investasi ekonomi digital menguat",
+    theme: "ekonomi",
+    tag: "PASAR & BISNIS",
+    date: "Pasar Keuangan",
+    link: "https://www.idx.co.id/"
+  },
+  {
+    title: "Ketahanan pangan nasional & panen raya terasering sawah Nusantara diperkuat",
+    theme: "nasional",
+    tag: "AGRO & PANGAN",
+    date: "Ketahanan Pangan",
+    link: "https://www.antaranews.com/top-news"
+  }
+];
+let currentNewsIdx = 0;
+let currentTheme = "demo";
+
+// Partikel animasi
+let stars = [];
+for (let i = 0; i < 30; i++) {
+  stars.push({ x: Math.random() * 226, y: Math.random() * 55, a: Math.random() });
+}
+let rainDrops = [];
+for (let i = 0; i < 45; i++) {
+  rainDrops.push({ x: Math.random() * 226, y: Math.random() * 125, s: 4 + Math.random() * 3 });
+}
+let cloudPuffs = [
+  { x: 10, y: 15, w: 45, s: 0.2 },
+  { x: 90, y: 25, w: 55, s: 0.15 },
+  { x: 170, y: 10, w: 40, s: 0.25 }
+];
+
+function initSidebarPixelDiorama() {
+  const canvas = document.getElementById("sidebarPixelCanvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  updateWallpaperDisplay();
+
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // ========================================================
     // LANSKAP 1: BUNDARAN HI & PATUNG SELAMAT DATANG (TEMA DEMO)
     // ========================================================
     if (currentTheme === "demo") {
@@ -1420,32 +1779,60 @@ function initSidebarPixelDiorama() {
 
 const pixelWallpapers = [
   {
-    theme: "demo",
-    tag: "JAKARTA",
-    badge: "BUNDARAN HI",
-    title: "Monumen Selamat Datang, Air Mancur & Siluet Kota Jakarta",
-    badgeColor: "#ef4444"
+    theme: "bumiayu",
+    tag: "BUMIAYU",
+    badge: "GUNUNG SLAMET",
+    title: "Lembah Asri Bumiayu, Gunung Slamet & Jembatan Sakalibel",
+    badgeColor: "#059669"
   },
   {
-    theme: "hujan",
-    tag: "ALAM NUSANTARA",
-    badge: "HUJAN & PETIR",
-    title: "Lembah Pegunungan, Hujan Tropis & Kilatan Halilintar",
+    theme: "jawa",
+    tag: "TANAH JAWA",
+    badge: "BOROBUDUR",
+    title: "Candi Borobudur, Kabut Fajar Magelang & Pohon Beringin",
+    badgeColor: "#b45309"
+  },
+  {
+    theme: "madura",
+    tag: "MADURA",
+    badge: "KARAPAN SAPI",
+    title: "Arena Pasir Pesisir Selat Madura & Karapan Sapi Gagah",
+    badgeColor: "#dc2626"
+  },
+  {
+    theme: "bali",
+    tag: "PULAU BALI",
+    badge: "PURA ULUN DANU",
+    title: "Danau Beratan Bedugul, Gapura Candi Bentar & Payung Tedung",
+    badgeColor: "#d97706"
+  },
+  {
+    theme: "sumatra",
+    tag: "SUMATRA",
+    badge: "RUMAH GADANG",
+    title: "Lembah Ngarai Sianok Minangkabau & Atap Rumah Gadang",
+    badgeColor: "#ea580c"
+  },
+  {
+    theme: "kalimantan",
+    tag: "KALIMANTAN",
+    badge: "PASAR TERAPUNG",
+    title: "Sungai Barito, Hutan Hujan Tropis & Perahu Pasar Terapung",
+    badgeColor: "#16a34a"
+  },
+  {
+    theme: "sulawesi",
+    tag: "SULAWESI",
+    badge: "TONGKONAN",
+    title: "Perbukitan Tana Toraja & Rumah Adat Tongkonan Megah",
+    badgeColor: "#7c3aed"
+  },
+  {
+    theme: "papua",
+    tag: "TANAH PAPUA",
+    badge: "RAJA AMPAT",
+    title: "Gugusan Karst Zamrud Raja Ampat & Rumah Adat Honai",
     badgeColor: "#0284c7"
-  },
-  {
-    theme: "ekonomi",
-    tag: "FINANSIAL",
-    badge: "PASAR & IHSG",
-    title: "Matrix Cyberpunk Candlestick Saham & Fluktuasi Pasar Modal",
-    badgeColor: "#00d284"
-  },
-  {
-    theme: "nasional",
-    tag: "AGRARIS",
-    badge: "SAWAH HIJAU",
-    title: "Pematang Sawah Terasering & Pondok Petani Fajar Indonesia",
-    badgeColor: "#8b5cf6"
   }
 ];
 let currentWallpaperIdx = 0;
@@ -1500,10 +1887,8 @@ document.addEventListener("DOMContentLoaded", () => {
 // =========================================================================
 async function fetchImmichStatus() {
   try {
-    const res = await authedFetch("/api/immich/status");
-    if (!res.ok) return;
-    const data = await res.json();
-    if (!data.success) return;
+    const data = await authedFetch("/api/immich/status");
+    if (!data || !data.success) return;
 
     // Update Immich Core
     const immichStatus = (data.services.immich.status || "").toLowerCase();
@@ -1650,21 +2035,13 @@ function toggleThumbDisplayMode() {
 async function sendImmichAction(actionName) {
   if (!confirm("Kirim perintah " + actionName + " ke Immich?")) return;
   try {
-    const res = await authedFetch("/api/immich/action", {
+    const d = await authedFetch("/api/immich/action", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: actionName })
     });
-    const text = await res.text();
-    let d;
-    try {
-      d = JSON.parse(text);
-    } catch(err) {
-      alert("Respon server: " + text);
-      return;
-    }
     alert(d.message || "Perintah berhasil dikirim");
-    setTimeout(fetchImmichStatus, 1500);
+    setTimeout(fetchImmichStatus, 1000);
   } catch (e) {
     alert("Gagal mengirim aksi: " + e);
   }
